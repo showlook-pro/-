@@ -2,7 +2,8 @@ import {
   buildFormProperties,
   buildFormSubmissionOperation,
   getEditableFormFields,
-  getFormDefinition
+  getFormDefinition,
+  getFormLayoutPropertyIds
 } from '@/lib/notion/forms'
 
 describe('notion forms helpers', () => {
@@ -16,6 +17,10 @@ describe('notion forms helpers', () => {
           schema: {
             extraText: {
               name: '人员',
+              type: 'text'
+            },
+            genericText: {
+              name: '文本',
               type: 'text'
             },
             phone: {
@@ -76,7 +81,25 @@ describe('notion forms helpers', () => {
           format: {
             form_config: {
               description: [['请认真填写此表']]
+            },
+            form_layout_pointer: {
+              id: 'layout1'
             }
+          }
+        }
+      }
+    },
+    layout: {
+      layout1: {
+        value: {
+          id: 'layout1',
+          format: {
+            fields: [
+              { property: 'title' },
+              { property: 'phone' },
+              { property: 'place' },
+              { property: 'selectText' }
+            ]
           }
         }
       }
@@ -97,26 +120,36 @@ describe('notion forms helpers', () => {
     expect(definition.description).toBe('请认真填写此表')
     expect(definition.fields.map(field => field.id)).toEqual([
       'title',
-      'extraText',
       'phone',
       'place',
-      'selectText',
-      'select'
+      'selectText'
     ])
   })
 
-  it('filters out readonly fields when building editable fields', () => {
+  it('filters out readonly and generic schema-only fields in fallback mode', () => {
     const fields = getEditableFormFields(recordMap.collection.collection1.value)
     expect(fields.some(field => field.id === 'createdBy')).toBe(false)
+    expect(fields.some(field => field.id === 'extraText')).toBe(false)
+    expect(fields.some(field => field.id === 'genericText')).toBe(false)
     expect(fields.find(field => field.id === 'selectText').inputKind).toBe(
       'textarea'
     )
-    expect(fields.find(field => field.id === 'selectText').suggestions).toEqual([
-      '选项 1'
-    ])
+    expect(fields.find(field => field.id === 'selectText').suggestions).toEqual(
+      []
+    )
     expect(fields.find(field => field.id === 'select').inputKind).toBe(
       'select'
     )
+  })
+
+  it('honors layout property ids when a form layout record is available', () => {
+    const layoutPropertyIds = getFormLayoutPropertyIds({
+      collection: recordMap.collection.collection1.value,
+      formBlock: recordMap.block.formBlock1.value,
+      recordMap
+    })
+
+    expect(layoutPropertyIds).toEqual(['title', 'phone', 'place', 'selectText'])
   })
 
   it('serializes form values into notion properties', async () => {

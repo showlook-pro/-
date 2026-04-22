@@ -22,6 +22,10 @@ describe('NotionFormView', () => {
                   name: '人员',
                   type: 'text'
                 },
+                genericText: {
+                  name: '文本',
+                  type: 'text'
+                },
                 phone: {
                   name: '您的电话号码',
                   type: 'phone_number'
@@ -98,13 +102,14 @@ describe('NotionFormView', () => {
     expect(screen.getByText('市场合作意向表')).toBeInTheDocument()
     expect(screen.getByText('请认真填写此表')).toBeInTheDocument()
     expect(screen.getByLabelText('您的姓名')).toBeInTheDocument()
-    expect(screen.getByLabelText('人员')).toBeInTheDocument()
+    expect(screen.queryByLabelText('人员')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('文本')).not.toBeInTheDocument()
     expect(screen.getByLabelText('您的电话号码')).toBeInTheDocument()
     expect(screen.getByLabelText('您的地址')).toBeInTheDocument()
 
     const intentField = screen.getByLabelText('合作方式及意向')
     expect(intentField.tagName).toBe('TEXTAREA')
-    expect(screen.getByRole('button', { name: '选项 1' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '选项 1' })).not.toBeInTheDocument()
     expect(
       screen.getByRole('button', {
         name: '提交'

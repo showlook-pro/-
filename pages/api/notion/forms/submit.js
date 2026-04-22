@@ -3,8 +3,10 @@ import {
   NOTION_EXTERNAL_FORM_USER_ID,
   buildFormProperties,
   buildFormSubmissionOperation,
-  geocodePlace
+  geocodePlace,
+  getFormLayoutPropertyIds
 } from '@/lib/notion/forms'
+import { normalizeRecordMap } from '@/lib/notion/normalizeRecordMap'
 import {
   buildSyncRecordRequest,
   submitTransaction,
@@ -12,13 +14,17 @@ import {
 } from '@/lib/notion/requestNotion'
 
 const getPublicFormContext = async ({ collectionId, formBlockId }) => {
-  const recordMap = await syncRecordValues([
-    buildSyncRecordRequest(collectionId, 'collection'),
-    buildSyncRecordRequest(formBlockId, 'block')
-  ])
+  const recordMap = await syncRecordValues(
+    [
+      buildSyncRecordRequest(collectionId, 'collection'),
+      buildSyncRecordRequest(formBlockId, 'block')
+    ],
+    { requireAuth: true }
+  )
+  normalizeRecordMap(recordMap?.recordMap)
 
-  const collection = recordMap?.recordMap?.collection?.[collectionId]?.value?.value
-  const formBlock = recordMap?.recordMap?.block?.[formBlockId]?.value?.value
+  const collection = recordMap?.recordMap?.collection?.[collectionId]?.value
+  const formBlock = recordMap?.recordMap?.block?.[formBlockId]?.value
 
   if (!collection) {
     throw new Error('未找到公开表单对应的数据表')
@@ -28,7 +34,37 @@ const getPublicFormContext = async ({ collectionId, formBlockId }) => {
     throw new Error('未找到公开表单配置')
   }
 
-  return { collection, formBlock }
+  const layoutId = formBlock?.format?.form_layout_pointer?.id
+  const layoutRecordMap = {
+    collection: {
+      [collectionId]: {
+        value: collection
+      }
+    },
+    block: {
+      [formBlockId]: {
+        value: formBlock
+      }
+    },
+    layout: {}
+  }
+
+  if (layoutId) {
+    const layoutResult = await syncRecordValues(
+      [buildSyncRecordRequest(layoutId, 'layout')],
+      { requireAuth: true }
+    )
+    normalizeRecordMap(layoutResult?.recordMap)
+    layoutRecordMap.layout = layoutResult?.recordMap?.layout || {}
+  }
+
+  const layoutPropertyIds = getFormLayoutPropertyIds({
+    collection,
+    formBlock,
+    recordMap: layoutRecordMap
+  })
+
+  return { collection, formBlock, layoutPropertyIds }
 }
 
 export default async function handler(req, res) {
@@ -57,8 +93,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { collection } = await getPublicFormContext({ collectionId, formBlockId })
+    const { collection, layoutPropertyIds } = await getPublicFormContext({
+      collectionId,
+      formBlockId
+    })
     const properties = await buildFormProperties(collection, values, {
+      layoutPropertyIds,
       resolvePlace: geocodePlace
     })
 
