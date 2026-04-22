@@ -1,4 +1,7 @@
-import { getFormDefinition } from '@/lib/notion/forms'
+import {
+  getFormDefinition,
+  validateFormValues
+} from '@/lib/notion/forms'
 import { startTransition, useEffect, useMemo, useState } from 'react'
 import { useNotionContext } from 'react-notion-x'
 
@@ -380,7 +383,6 @@ const renderFieldControl = ({ disabled, field, onChange, value }) => {
         />
       )
     case 'email':
-    case 'tel':
     case 'url':
       return (
         <input
@@ -388,6 +390,19 @@ const renderFieldControl = ({ disabled, field, onChange, value }) => {
           className='notion-form-input'
           onChange={event => onChange(field.id, event.target.value)}
           type={field.inputKind}
+          value={value}
+        />
+      )
+    case 'tel':
+      return (
+        <input
+          {...commonProps}
+          autoComplete='tel'
+          className='notion-form-input'
+          inputMode='tel'
+          onChange={event => onChange(field.id, event.target.value)}
+          placeholder='请输入中国大陆手机号或固定电话'
+          type='tel'
           value={value}
         />
       )
@@ -416,6 +431,7 @@ const renderFieldControl = ({ disabled, field, onChange, value }) => {
 export default function NotionFormView({ block }) {
   const { recordMap } = useNotionContext()
   const [values, setValues] = useState(EMPTY_VALUES)
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_VALUES)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState({ type: 'idle', message: '' })
 
@@ -442,10 +458,32 @@ export default function NotionFormView({ block }) {
       ...currentValues,
       [fieldId]: nextValue
     }))
+
+    setFieldErrors(currentErrors => {
+      if (!currentErrors[fieldId]) {
+        return currentErrors
+      }
+
+      const nextErrors = { ...currentErrors }
+      delete nextErrors[fieldId]
+      return nextErrors
+    })
   }
 
   const submitForm = async () => {
+    const validationErrors = validateFormValues(form.fields, values)
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors)
+      setResult({
+        type: 'error',
+        message: '请先修正表单中的错误后再提交。'
+      })
+      return
+    }
+
     setIsSubmitting(true)
+    setFieldErrors(EMPTY_VALUES)
     setResult({ type: 'idle', message: '' })
 
     try {
@@ -520,6 +558,12 @@ export default function NotionFormView({ block }) {
                   onChange: handleChange,
                   value: fieldValue
                 })}
+
+                {fieldErrors[field.id] && (
+                  <div className='notion-form-field-error' role='alert'>
+                    {fieldErrors[field.id]}
+                  </div>
+                )}
 
                 {(inputKind === 'text' || inputKind === 'textarea') && (
                   <NotionTextSuggestions

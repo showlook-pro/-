@@ -475,6 +475,12 @@ html.dark .notion-form-view,
   font-size: 12px;
 }
 
+.notion-form-field-error {
+  color: var(--notion-form-error-text);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .notion-form-message {
   border-radius: 12px;
   padding: 12px 14px;

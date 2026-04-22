@@ -3,7 +3,10 @@ import {
   buildFormSubmissionOperation,
   getEditableFormFields,
   getFormDefinition,
-  getFormLayoutPropertyIds
+  getFormLayoutPropertyIds,
+  isMainlandPhoneNumber,
+  normalizeMainlandPhoneNumber,
+  validateFormValues
 } from '@/lib/notion/forms'
 
 describe('notion forms helpers', () => {
@@ -157,7 +160,7 @@ describe('notion forms helpers', () => {
       recordMap.collection.collection1.value,
       {
         title: '小鹿',
-        phone: '13800138000',
+        phone: '+86 138 0013 8000',
         place: '郑州临空生物医药园',
         selectText: '选项 1',
         select: '渠道合作'
@@ -174,6 +177,27 @@ describe('notion forms helpers', () => {
     expect(properties.place).toEqual([
       ['‣', [['plc', { lat: 34.42, lon: 113.85 }]]]
     ])
+  })
+
+  it('validates mainland China phone numbers consistently', () => {
+    const fields = getEditableFormFields(recordMap.collection.collection1.value)
+
+    expect(normalizeMainlandPhoneNumber('+86 138 0013 8000')).toBe(
+      '13800138000'
+    )
+    expect(isMainlandPhoneNumber('13800138000')).toBe(true)
+    expect(isMainlandPhoneNumber('010-12345678')).toBe(true)
+    expect(validateFormValues(fields, { phone: '12345' })).toEqual({
+      phone: '请输入有效的中国大陆手机号或固定电话。'
+    })
+  })
+
+  it('rejects invalid mainland China phone numbers before serialization', async () => {
+    await expect(
+      buildFormProperties(recordMap.collection.collection1.value, {
+        phone: '12345'
+      })
+    ).rejects.toThrow('请输入有效的中国大陆手机号或固定电话。')
   })
 
   it('serializes selected place coordinates without geocoding again', async () => {

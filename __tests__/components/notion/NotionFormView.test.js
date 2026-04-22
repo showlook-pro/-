@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import NotionFormView from '@/components/notion/NotionFormView'
+import { MAINLAND_PHONE_ERROR_MESSAGE } from '@/lib/notion/forms'
 
 jest.mock('react-notion-x', () => ({
   useNotionContext: jest.fn()
@@ -8,6 +9,10 @@ jest.mock('react-notion-x', () => ({
 const { useNotionContext } = require('react-notion-x')
 
 describe('NotionFormView', () => {
+  beforeEach(() => {
+    global.fetch = jest.fn()
+  })
+
   beforeEach(() => {
     useNotionContext.mockReturnValue({
       recordMap: {
@@ -88,6 +93,10 @@ describe('NotionFormView', () => {
     })
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it('renders a native notion form using the form_editor view data', () => {
     render(
       <NotionFormView
@@ -115,5 +124,27 @@ describe('NotionFormView', () => {
         name: '提交'
       })
     ).toBeInTheDocument()
+  })
+
+  it('blocks invalid mainland China phone numbers before submitting', () => {
+    render(
+      <NotionFormView
+        block={{
+          id: 'collectionBlock1',
+          collection_id: 'collection1',
+          view_ids: ['formView']
+        }}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('您的电话号码'), {
+      target: {
+        value: '12345'
+      }
+    })
+    fireEvent.click(screen.getByRole('button', { name: '提交' }))
+
+    expect(screen.getByText(MAINLAND_PHONE_ERROR_MESSAGE)).toBeInTheDocument()
+    expect(global.fetch).not.toHaveBeenCalled()
   })
 })
