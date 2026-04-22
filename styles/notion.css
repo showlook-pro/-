@@ -404,6 +404,7 @@ html.dark .notion-form-view,
   display: flex;
   flex-direction: column;
   gap: 10px;
+  align-items: flex-start;
 }
 
 .notion-form-place-toolbar {
@@ -427,6 +428,10 @@ html.dark .notion-form-view,
 
 .notion-form-place-status-selected {
   color: var(--notion-form-success-text);
+}
+
+.notion-form-place-status-selected strong {
+  font-weight: 600;
 }
 
 .notion-form-place-status-error,
@@ -1816,6 +1821,46 @@ code[class*='language-'] {
 
 .notion-collection-card-property .notion-page-title-text {
   border-bottom: 0 none;
+}
+
+.notion-property-inline-value {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 4px;
+  white-space: normal;
+}
+
+.notion-property-inline-name {
+  color: var(--fg-color-3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+.notion-property-inline-content {
+  line-height: 1.65;
+}
+
+.notion-property-map-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-bottom: 1px solid currentColor;
+  color: var(--link-color);
+  cursor: pointer;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.notion-property-map-link:hover {
+  opacity: 0.84;
+}
+
+.notion-property-map-link:focus-visible {
+  outline: 2px solid var(--link-color);
+  outline-offset: 3px;
 }
 
 .notion-collection-card-property

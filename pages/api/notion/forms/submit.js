@@ -3,7 +3,6 @@ import {
   NOTION_EXTERNAL_FORM_USER_ID,
   buildFormProperties,
   buildFormSubmissionOperation,
-  geocodePlace,
   getFormLayoutPropertyIds
 } from '@/lib/notion/forms'
 import { normalizeRecordMap } from '@/lib/notion/normalizeRecordMap'
@@ -97,9 +96,8 @@ export default async function handler(req, res) {
       collectionId,
       formBlockId
     })
-    const properties = await buildFormProperties(collection, values, {
-      layoutPropertyIds,
-      resolvePlace: geocodePlace
+    const properties = buildFormProperties(collection, values, {
+      layoutPropertyIds
     })
 
     const actorId = BLOG.NOTION_ACTIVE_USER || NOTION_EXTERNAL_FORM_USER_ID

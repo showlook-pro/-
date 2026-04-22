@@ -2,12 +2,11 @@ import {
   getFormDefinition,
   validateFormValues
 } from '@/lib/notion/forms'
-import { startTransition, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNotionContext } from 'react-notion-x'
 
 const EMPTY_VALUES = {}
 const EMPTY_PLACE_VALUE = {
-  query: '',
   label: '',
   lat: null,
   lon: null
@@ -30,14 +29,6 @@ const getFieldValue = (values, field) => {
   if (field.inputKind === 'place') {
     if (currentValue && typeof currentValue === 'object') {
       return currentValue
-    }
-
-    if (typeof currentValue === 'string' && currentValue) {
-      return {
-        ...EMPTY_PLACE_VALUE,
-        query: currentValue,
-        label: currentValue
-      }
     }
 
     return EMPTY_PLACE_VALUE
@@ -80,132 +71,24 @@ function NotionTextSuggestions({ disabled, field, onChange, value }) {
   )
 }
 
-const searchPlaces = async ({
-  controller,
-  normalizedQuery,
-  setResults,
-  setSearchState
-}) => {
-  try {
-    const response = await fetch(
-      `/api/notion/forms/places/search?q=${encodeURIComponent(normalizedQuery)}`,
-      {
-        method: 'GET',
-        signal: controller.signal
-      }
-    )
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data?.message)
-    }
-
-    startTransition(() => {
-      setResults(data?.results || [])
-    })
-
-    if (Array.isArray(data?.results) && data.results.length > 0) {
-      setSearchState({ status: 'ready', message: '' })
-    } else {
-      setSearchState({
-        status: 'empty',
-        message: '未找到可识别的地址，请继续输入更完整的位置。'
-      })
-    }
-  } catch (error) {
-    if (error?.name === 'AbortError') {
-      return
-    }
-
-    startTransition(() => {
-      setResults([])
-    })
-
-    setSearchState({
-      status: 'error',
-      message: error?.message || '地址搜索暂时不可用，请稍后重试。'
-    })
-  }
-}
-
 function NotionPlaceInput({ disabled, field, onChange, value }) {
-  const [results, setResults] = useState([])
-  const [searchState, setSearchState] = useState({
+  const [locationState, setLocationState] = useState({
     status: 'idle',
     message: ''
   })
 
-  const query = value?.query || value?.label || ''
   const hasCoordinates = isResolvedPlaceValue(value)
-
-  useEffect(() => {
-    const normalizedQuery = query.trim()
-
-    if (!normalizedQuery || normalizedQuery.length < 2 || hasCoordinates) {
-      startTransition(() => {
-        setResults([])
-      })
-
-      setSearchState(currentState =>
-        currentState.status === 'location-error'
-          ? currentState
-          : { status: 'idle', message: '' }
-      )
-      return
-    }
-
-    const controller = new AbortController()
-    const timer = setTimeout(() => {
-      setSearchState({ status: 'searching', message: '' })
-
-      void searchPlaces({
-        controller,
-        normalizedQuery,
-        setResults,
-        setSearchState
-      })
-    }, 260)
-
-    return () => {
-      clearTimeout(timer)
-      controller.abort()
-    }
-  }, [hasCoordinates, query])
-
-  const handlePlaceChange = event => {
-    const nextQuery = event.target.value
-
-    onChange(field.id, {
-      ...EMPTY_PLACE_VALUE,
-      query: nextQuery,
-      label: nextQuery
-    })
-  }
-
-  const handlePlaceSelect = place => {
-    onChange(field.id, {
-      query: place.label,
-      label: place.label,
-      lat: place.lat,
-      lon: place.lon
-    })
-
-    startTransition(() => {
-      setResults([])
-    })
-    setSearchState({ status: 'selected', message: '' })
-  }
 
   const handleLocateCurrentPosition = () => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setSearchState({
+      setLocationState({
         status: 'location-error',
         message: '当前设备不支持定位。'
       })
       return
     }
 
-    setSearchState({ status: 'locating', message: '' })
+    setLocationState({ status: 'locating', message: '' })
 
     navigator.geolocation.getCurrentPosition(
       position => {
@@ -214,19 +97,15 @@ function NotionPlaceInput({ disabled, field, onChange, value }) {
         const label = `当前位置 (${lat.toFixed(6)}, ${lon.toFixed(6)})`
 
         onChange(field.id, {
-          query: label,
           label,
           lat,
           lon
         })
 
-        startTransition(() => {
-          setResults([])
-        })
-        setSearchState({ status: 'selected', message: '' })
+        setLocationState({ status: 'selected', message: '' })
       },
       () => {
-        setSearchState({
+        setLocationState({
           status: 'location-error',
           message: '无法获取当前位置，请检查浏览器定位权限。'
         })
@@ -241,68 +120,42 @@ function NotionPlaceInput({ disabled, field, onChange, value }) {
 
   return (
     <div className='notion-form-place'>
-      <div className='notion-form-place-toolbar'>
-        <input
-          autoComplete='street-address'
-          className='notion-form-input'
-          disabled={disabled}
-          id={`notion-form-field-${field.id}`}
-          name={field.id}
-          onChange={handlePlaceChange}
-          placeholder='搜索地址、地标，或直接使用当前位置'
-          type='text'
-          value={query}
-        />
-
-        <button
-          className='notion-form-place-action'
-          disabled={disabled}
-          onClick={handleLocateCurrentPosition}
-          type='button'>
-          获取当前位置
-        </button>
-      </div>
+      <button
+        className='notion-form-place-action'
+        disabled={disabled}
+        onClick={handleLocateCurrentPosition}
+        type='button'>
+        {hasCoordinates ? '重新获取当前位置' : '获取当前位置'}
+      </button>
 
       {hasCoordinates && (
         <div className='notion-form-place-status notion-form-place-status-selected'>
+          位置已锁定。
           已锁定坐标 {Number(value.lat).toFixed(6)}, {Number(value.lon).toFixed(6)}
         </div>
       )}
 
-      {!hasCoordinates && searchState.status === 'searching' && (
+      {!hasCoordinates && locationState.status === 'idle' && (
         <div className='notion-form-place-status' aria-live='polite'>
-          正在搜索可识别地址...
+          该字段仅接受当前坐标，请点击按钮授权浏览器定位。
+        </div>
+      )}
+
+      {!hasCoordinates && locationState.status === 'locating' && (
+        <div className='notion-form-place-status' aria-live='polite'>
+          正在获取当前位置...
         </div>
       )}
 
       {!hasCoordinates &&
-        searchState.message &&
-        searchState.status !== 'searching' && (
+        locationState.message &&
+        locationState.status !== 'locating' && (
           <div
             aria-live='polite'
-            className={`notion-form-place-status notion-form-place-status-${searchState.status}`}>
-            {searchState.message}
+            className={`notion-form-place-status notion-form-place-status-${locationState.status}`}>
+            {locationState.message}
           </div>
         )}
-
-      {!hasCoordinates && results.length > 0 && (
-        <ul className='notion-form-place-results'>
-          {results.map(place => (
-            <li key={`${place.label}-${place.lat}-${place.lon}`}>
-              <button
-                className='notion-form-place-option'
-                disabled={disabled}
-                onClick={() => handlePlaceSelect(place)}
-                type='button'>
-                <span className='notion-form-place-option-label'>{place.label}</span>
-                <span className='notion-form-place-option-coordinates'>
-                  {Number(place.lat).toFixed(6)}, {Number(place.lon).toFixed(6)}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   )
 }

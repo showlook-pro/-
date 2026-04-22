@@ -18,7 +18,6 @@ const NotionPage = ({ post, className }) => {
   const POST_DISABLE_GALLERY_CLICK = siteConfig('POST_DISABLE_GALLERY_CLICK')
   const POST_DISABLE_DATABASE_CLICK = siteConfig('POST_DISABLE_DATABASE_CLICK')
   const SPOILER_TEXT_TAG = siteConfig('SPOILER_TEXT_TAG')
-  const shouldShowCollectionPageProperties = Boolean(post?.show_page_properties)
 
   const zoom =
     isBrowser &&
@@ -84,7 +83,12 @@ const NotionPage = ({ post, className }) => {
     return () => {
       observer.disconnect()
     }
-  }, [post])
+  }, [
+    IMAGE_ZOOM_IN_WIDTH,
+    POST_DISABLE_DATABASE_CLICK,
+    POST_DISABLE_GALLERY_CLICK,
+    post
+  ])
 
   useEffect(() => {
     // Spoiler文本功能
@@ -100,11 +104,7 @@ const NotionPage = ({ post, className }) => {
       })
     }
 
-    if (shouldShowCollectionPageProperties) {
-      return
-    }
-
-    // 默认隐藏数据库详情页属性，仅对显式声明了控制字段的数据库保留
+    // 数据库详情页属性始终由容器页决定是否外露，详情页本身默认隐藏
     const timer = setTimeout(() => {
       const elements = document.querySelectorAll(
         '.notion-collection-page-properties'
@@ -116,7 +116,7 @@ const NotionPage = ({ post, className }) => {
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [post, shouldShowCollectionPageProperties])
+  }, [SPOILER_TEXT_TAG, post])
 
   return (
     <div
@@ -128,7 +128,12 @@ const NotionPage = ({ post, className }) => {
         mapImageUrl={mapImgUrl}
         components={{
           Code,
-          Collection,
+          Collection: collectionProps => (
+            <Collection
+              {...collectionProps}
+              pagePropertiesMode={post?.show_page_properties_mode}
+            />
+          ),
           Equation,
           Modal,
           Pdf,

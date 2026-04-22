@@ -1,132 +1,235 @@
 import NotionFormView from '@/components/notion/NotionFormView'
-import { isShowPagePropertiesField } from '@/lib/notion/pageProperties'
+import NotionProperty from '@/components/notion/NotionProperty'
 import { getRecordValue, isFormCollectionView } from '@/lib/notion/forms'
-import { useEffect, useMemo, useState } from 'react'
+import { isShowPagePropertiesField } from '@/lib/notion/pageProperties'
+import { useEffect, useState } from 'react'
 import { useNotionContext } from 'react-notion-x'
-import {
-  Collection as DefaultCollection,
-  Property as DefaultProperty
-} from 'react-notion-x/build/third-party/collection'
+import { Collection as DefaultCollection } from 'react-notion-x/build/third-party/collection'
+
+const VIEW_PROPERTY_KEYS = {
+  board: 'board_properties',
+  gallery: 'gallery_properties',
+  list: 'list_properties',
+  table: 'table_properties'
+}
 
 const getViewLabel = view => view?.name || (view?.type === 'table' ? '表格' : '视图')
 
-const getCollectionPagePropertyIds = (collection, schemas) => {
-  let propertyIds = Object.keys(schemas || {}).filter(id => id !== 'title')
+const getCollectionId = (block, recordMap) =>
+  block?.collection_id ||
+  getRecordValue(recordMap?.collection_view, block?.view_ids?.[0])?.format
+    ?.collection_pointer?.id ||
+  block?.parent_id
 
-  if (collection?.format?.property_visibility) {
-    propertyIds = propertyIds.filter(id => {
-      const visibility = collection.format.property_visibility.find(
-        property => property.property === id
+const getSortedPropertyIds = collection => {
+  const schema = collection?.schema || {}
+  let propertyIds = Object.keys(schema).filter(propertyId => {
+    if (propertyId === 'title') {
+      return false
+    }
+
+    const field = schema[propertyId]
+    if (!field || isShowPagePropertiesField(field)) {
+      return false
+    }
+
+    return true
+  })
+
+  const propertyVisibility = Array.isArray(collection?.format?.property_visibility)
+    ? collection.format.property_visibility
+    : []
+
+  if (propertyVisibility.length > 0) {
+    propertyIds = propertyIds.filter(propertyId => {
+      const visibility = propertyVisibility.find(
+        property => property.property === propertyId
       )?.visibility
 
       return visibility !== 'hide'
     })
   }
 
-  if (collection?.format?.collection_page_properties) {
-    const idToIndex = Object.fromEntries(
-      collection.format.collection_page_properties.map((property, index) => [
-        property.property,
-        index
-      ])
+  const orderedProperties = Array.isArray(collection?.format?.collection_page_properties)
+    ? collection.format.collection_page_properties
+    : []
+
+  if (orderedProperties.length > 0) {
+    const order = Object.fromEntries(
+      orderedProperties.map((property, index) => [property.property, index])
     )
 
-    propertyIds.sort((left, right) => (idToIndex[left] ?? 999) - (idToIndex[right] ?? 999))
+    propertyIds.sort((left, right) => (order[left] ?? 999) - (order[right] ?? 999))
   } else {
     propertyIds.sort((left, right) =>
-      String(schemas[left]?.name || '').localeCompare(String(schemas[right]?.name || ''))
+      String(schema[left]?.name || '').localeCompare(String(schema[right]?.name || ''))
     )
   }
 
-  return propertyIds.filter(propertyId => !isShowPagePropertiesField(schemas[propertyId]))
+  return propertyIds
 }
 
-function NotionCollectionPageProperties({ block, className, recordMap }) {
-  const collection = getRecordValue(recordMap?.collection, block?.parent_id)
-  const schemas = collection?.schema
+const getConfiguredViewProperties = (collection, collectionView) => {
+  const propertyKey = VIEW_PROPERTY_KEYS[collectionView?.type]
 
-  if (!collection || !schemas) {
-    return null
+  if (!propertyKey) {
+    return []
   }
 
-  const propertyIds = getCollectionPagePropertyIds(collection, schemas)
+  const configuredProperties = Array.isArray(collectionView?.format?.[propertyKey])
+    ? collectionView.format[propertyKey]
+    : []
 
+  const filteredProperties = configuredProperties.filter(property => {
+    const field = collection?.schema?.[property?.property]
+    return field && property.property !== 'title' && !isShowPagePropertiesField(field)
+  })
+
+  if (filteredProperties.length > 0) {
+    return filteredProperties.map(property => ({
+      ...property,
+      visible: property.visible !== false
+    }))
+  }
+
+  return getSortedPropertyIds(collection).map(property => ({
+    property,
+    visible: true
+  }))
+}
+
+const patchCollectionViewProperties = (collection, collectionView) => {
+  const propertyKey = VIEW_PROPERTY_KEYS[collectionView?.type]
+
+  if (!propertyKey) {
+    return collectionView
+  }
+
+  return {
+    ...collectionView,
+    format: {
+      ...(collectionView?.format || {}),
+      [propertyKey]: getConfiguredViewProperties(collection, collectionView)
+    }
+  }
+}
+
+const patchCollectionViewsRecordMap = (recordMap, collection, viewIds) => {
+  if (!recordMap?.collection_view || !collection || !Array.isArray(viewIds)) {
+    return recordMap
+  }
+
+  let hasChanges = false
+  const collectionViews = { ...recordMap.collection_view }
+
+  for (const viewId of viewIds) {
+    const viewRecord = collectionViews?.[viewId]
+    const view = viewRecord?.value
+
+    if (!view || isFormCollectionView(view) || !VIEW_PROPERTY_KEYS[view.type]) {
+      continue
+    }
+
+    collectionViews[viewId] = {
+      ...viewRecord,
+      value: patchCollectionViewProperties(collection, view)
+    }
+    hasChanges = true
+  }
+
+  if (!hasChanges) {
+    return recordMap
+  }
+
+  return {
+    ...recordMap,
+    collection_view: collectionViews
+  }
+}
+
+function NonNavigatingPageLink({ children, className, href, ...rest }) {
   return (
-    <div className='notion-collection-page-properties'>
-      <div className={`notion-collection-row ${className || ''}`}>
-        <div className='notion-collection-row-body'>
-          {propertyIds.map(propertyId => {
-            const schema = schemas[propertyId]
-            if (!schema) return null
-
-            return (
-              <div className='notion-collection-row-property' key={propertyId}>
-                <div className='notion-collection-column-title'>
-                  <span>{schema.name}</span>
-                </div>
-                <div className='notion-collection-row-value'>
-                  <DefaultProperty
-                    block={block}
-                    collection={collection}
-                    data={block?.properties?.[propertyId]}
-                    pageHeader
-                    propertyId={propertyId}
-                    schema={schema}
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+    <div className={className} {...rest}>
+      {children}
     </div>
   )
 }
 
-export default function NotionCollection({ block, className, ctx }) {
-  const { recordMap } = useNotionContext()
-  const isCollectionPage =
-    block?.type === 'page' && block?.parent_table === 'collection'
+const buildCollectionContext = ({
+  ctx,
+  notionContext,
+  pagePropertiesMode,
+  recordMap,
+  collection,
+  viewIds
+}) => {
+  const nextRecordMap = pagePropertiesMode
+    ? patchCollectionViewsRecordMap(recordMap, collection, viewIds)
+    : recordMap
 
-  const viewIds = useMemo(
-    () => (Array.isArray(block?.view_ids) ? block.view_ids : []),
-    [block?.view_ids]
-  )
-
-  const views = useMemo(
-    () =>
-      viewIds
-        .map(viewId => getRecordValue(recordMap?.collection_view, viewId))
-        .filter(Boolean),
-    [recordMap?.collection_view, viewIds]
-  )
-
-  const hasFormView = views.some(isFormCollectionView)
-  const [activeViewId, setActiveViewId] = useState(viewIds[0])
-
-  useEffect(() => {
-    setActiveViewId(viewIds[0])
-  }, [viewIds])
-
-  if (isCollectionPage) {
-    return (
-      <NotionCollectionPageProperties
-        block={block}
-        className={className}
-        recordMap={recordMap}
-      />
+  const components = {
+    ...(notionContext?.components || {}),
+    ...(ctx?.components || {}),
+    Property: props => (
+      <NotionProperty {...props} pagePropertiesMode={pagePropertiesMode} />
     )
   }
 
-  if (!hasFormView || !viewIds.length) {
-    return <DefaultCollection block={block} className={className} ctx={ctx} />
+  if (pagePropertiesMode === 'showclose') {
+    components.PageLink = NonNavigatingPageLink
+  }
+
+  return {
+    ...(notionContext || {}),
+    ...(ctx || {}),
+    recordMap: nextRecordMap,
+    components
+  }
+}
+
+export default function NotionCollection({
+  block,
+  className,
+  ctx,
+  pagePropertiesMode = ''
+}) {
+  const notionContext = useNotionContext()
+  const recordMap = notionContext?.recordMap || ctx?.recordMap
+  const viewIds = Array.isArray(block?.view_ids) ? block.view_ids : []
+  const defaultViewId = viewIds[0]
+  const collectionId = getCollectionId(block, recordMap)
+  const collection = getRecordValue(recordMap?.collection, collectionId)
+  const views = viewIds
+    .map(viewId => getRecordValue(recordMap?.collection_view, viewId))
+    .filter(Boolean)
+  const hasFormView = views.some(isFormCollectionView)
+  const collectionCtx = buildCollectionContext({
+    ctx,
+    notionContext,
+    pagePropertiesMode,
+    recordMap,
+    collection,
+    viewIds
+  })
+
+  const [activeViewId, setActiveViewId] = useState(defaultViewId)
+
+  useEffect(() => {
+    setActiveViewId(defaultViewId)
+  }, [block?.id, defaultViewId])
+
+  if (!hasFormView) {
+    return <DefaultCollection block={block} className={className} ctx={collectionCtx} />
   }
 
   const activeView =
-    getRecordValue(recordMap?.collection_view, activeViewId) || views[0]
+    getRecordValue(collectionCtx?.recordMap?.collection_view, activeViewId) ||
+    getRecordValue(collectionCtx?.recordMap?.collection_view, viewIds[0]) ||
+    views[0]
+
   const activeBlock = {
     ...block,
-    view_ids: activeView?.id ? [activeView.id] : block.view_ids
+    view_ids: activeView?.id ? [activeView.id] : block?.view_ids
   }
 
   return (
@@ -156,7 +259,11 @@ export default function NotionCollection({ block, className, ctx }) {
       {isFormCollectionView(activeView) ? (
         <NotionFormView block={activeBlock} />
       ) : (
-        <DefaultCollection block={activeBlock} className={className} ctx={ctx} />
+        <DefaultCollection
+          block={activeBlock}
+          className={className}
+          ctx={collectionCtx}
+        />
       )}
     </div>
   )
