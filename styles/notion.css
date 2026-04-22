@@ -202,10 +202,12 @@
 
 .notion-form-view {
   width: 100%;
+  --notion-form-content-width: min(100%, 52rem);
   --notion-form-title: #111827;
   --notion-form-text: #111827;
   --notion-form-muted: #4b5563;
   --notion-form-label-color: #111827;
+  --notion-form-panel-bg: rgba(255, 255, 255, 0);
   --notion-form-input-bg: #ffffff;
   --notion-form-input-text: #111827;
   --notion-form-input-border: rgba(15, 23, 42, 0.12);
@@ -215,6 +217,11 @@
   --notion-form-button-bg: #111827;
   --notion-form-button-text: #ffffff;
   --notion-form-button-shadow: rgba(15, 23, 42, 0.18);
+  --notion-form-chip-bg: rgba(15, 23, 42, 0.05);
+  --notion-form-chip-border: rgba(15, 23, 42, 0.08);
+  --notion-form-chip-text: #334155;
+  --notion-form-option-bg: rgba(255, 255, 255, 0.72);
+  --notion-form-option-hover-bg: rgba(248, 250, 252, 0.96);
   --notion-form-success-bg: rgba(34, 197, 94, 0.12);
   --notion-form-success-text: #166534;
   --notion-form-error-bg: rgba(239, 68, 68, 0.12);
@@ -233,6 +240,7 @@ html.dark .notion-form-view,
   --notion-form-text: rgba(248, 250, 252, 0.94);
   --notion-form-muted: rgba(226, 232, 240, 0.72);
   --notion-form-label-color: rgba(248, 250, 252, 0.9);
+  --notion-form-panel-bg: rgba(15, 23, 42, 0);
   --notion-form-input-bg: rgba(255, 255, 255, 0.96);
   --notion-form-input-text: #0f172a;
   --notion-form-input-border: rgba(255, 255, 255, 0.18);
@@ -242,6 +250,11 @@ html.dark .notion-form-view,
   --notion-form-button-bg: #ffffff;
   --notion-form-button-text: #0f172a;
   --notion-form-button-shadow: rgba(255, 255, 255, 0.16);
+  --notion-form-chip-bg: rgba(255, 255, 255, 0.12);
+  --notion-form-chip-border: rgba(255, 255, 255, 0.18);
+  --notion-form-chip-text: rgba(248, 250, 252, 0.9);
+  --notion-form-option-bg: rgba(255, 255, 255, 0.08);
+  --notion-form-option-hover-bg: rgba(255, 255, 255, 0.14);
   --notion-form-success-bg: rgba(34, 197, 94, 0.16);
   --notion-form-success-text: #dcfce7;
   --notion-form-error-bg: rgba(239, 68, 68, 0.18);
@@ -252,6 +265,21 @@ html.dark .notion-form-view,
   color: var(--notion-form-title);
 }
 
+.notion-form-collection-wrapper {
+  width: 100%;
+}
+
+.notion-form-collection-wrapper .notion-collection-view-tabs-row {
+  width: var(--notion-form-content-width);
+  margin: 0 auto 10px;
+  overflow-x: auto;
+}
+
+.notion-form-view .notion-collection-header {
+  width: var(--notion-form-content-width);
+  margin: 0 auto;
+}
+
 .notion-form-collection {
   width: 100%;
 }
@@ -259,13 +287,15 @@ html.dark .notion-form-view,
 .notion-form-card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  max-width: 560px;
-  padding: 20px 0 6px;
+  gap: 20px;
+  width: var(--notion-form-content-width);
+  margin: 0 auto;
+  padding: 24px 0 10px;
+  background: var(--notion-form-panel-bg);
 }
 
 .notion-form-description {
+  max-width: 44rem;
   margin: 0;
   color: var(--notion-form-muted);
   line-height: 1.7;
@@ -285,12 +315,12 @@ html.dark .notion-form-view,
 
 .notion-form-input {
   width: 100%;
-  min-height: 44px;
+  min-height: 52px;
   border: 1px solid var(--notion-form-input-border);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--notion-form-input-bg);
   color: var(--notion-form-input-text);
-  padding: 0 14px;
+  padding: 0 16px;
   font: inherit;
   box-shadow: 0 10px 28px -22px var(--notion-form-button-shadow);
   transition:
@@ -310,13 +340,15 @@ html.dark .notion-form-view,
 }
 
 .notion-form-textarea {
-  min-height: 120px;
-  padding: 12px 14px;
+  min-height: 164px;
+  padding: 14px 16px;
+  line-height: 1.65;
   resize: vertical;
 }
 
 .notion-form-select {
   appearance: none;
+  min-height: 52px;
 }
 
 .notion-form-checkbox {
@@ -330,6 +362,117 @@ html.dark .notion-form-view,
 .notion-form-checkbox input {
   width: 18px;
   height: 18px;
+}
+
+.notion-form-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.notion-form-suggestion,
+.notion-form-place-action {
+  border: 1px solid var(--notion-form-chip-border);
+  border-radius: 999px;
+  background: var(--notion-form-chip-bg);
+  color: var(--notion-form-chip-text);
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.notion-form-suggestion:hover,
+.notion-form-place-action:hover {
+  transform: translateY(-1px);
+  background: var(--notion-form-option-hover-bg);
+}
+
+.notion-form-suggestion:disabled,
+.notion-form-place-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.notion-form-place {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notion-form-place-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.notion-form-place-action {
+  min-height: 52px;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+.notion-form-place-status {
+  color: var(--notion-form-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.notion-form-place-status-selected {
+  color: var(--notion-form-success-text);
+}
+
+.notion-form-place-status-error,
+.notion-form-place-status-location-error {
+  color: var(--notion-form-error-text);
+}
+
+.notion-form-place-results {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notion-form-place-option {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--notion-form-chip-border);
+  border-radius: 14px;
+  background: var(--notion-form-option-bg);
+  color: var(--notion-form-text);
+  padding: 12px 14px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.notion-form-place-option:hover {
+  transform: translateY(-1px);
+  background: var(--notion-form-option-hover-bg);
+}
+
+.notion-form-place-option-label {
+  line-height: 1.45;
+}
+
+.notion-form-place-option-coordinates {
+  color: var(--notion-form-muted);
+  font-size: 12px;
 }
 
 .notion-form-message {
@@ -376,6 +519,31 @@ html.dark .notion-form-view,
   cursor: not-allowed;
   opacity: 0.6;
   transform: none;
+}
+
+@media (max-width: 1023px) {
+  .notion-form-view {
+    --notion-form-content-width: min(100%, 44rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .notion-form-view {
+    --notion-form-content-width: 100%;
+  }
+
+  .notion-form-card {
+    gap: 16px;
+    padding-top: 18px;
+  }
+
+  .notion-form-place-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .notion-form-submit {
+    width: 100%;
+  }
 }
 
 .medium-zoom-image {

@@ -35,6 +35,11 @@ describe('notion forms helpers', () => {
               type: 'text',
               options: [{ id: 'a', value: '选项 1' }]
             },
+            select: {
+              name: '合作类型',
+              type: 'select',
+              options: [{ id: 'b', value: '渠道合作' }]
+            },
             title: {
               name: '您的姓名',
               type: 'title'
@@ -95,7 +100,8 @@ describe('notion forms helpers', () => {
       'extraText',
       'phone',
       'place',
-      'selectText'
+      'selectText',
+      'select'
     ])
   })
 
@@ -103,6 +109,12 @@ describe('notion forms helpers', () => {
     const fields = getEditableFormFields(recordMap.collection.collection1.value)
     expect(fields.some(field => field.id === 'createdBy')).toBe(false)
     expect(fields.find(field => field.id === 'selectText').inputKind).toBe(
+      'textarea'
+    )
+    expect(fields.find(field => field.id === 'selectText').suggestions).toEqual([
+      '选项 1'
+    ])
+    expect(fields.find(field => field.id === 'select').inputKind).toBe(
       'select'
     )
   })
@@ -114,7 +126,8 @@ describe('notion forms helpers', () => {
         title: '小鹿',
         phone: '13800138000',
         place: '郑州临空生物医药园',
-        selectText: '选项 1'
+        selectText: '选项 1',
+        select: '渠道合作'
       },
       {
         resolvePlace: async () => ({ lat: 34.42, lon: 113.85 })
@@ -124,8 +137,31 @@ describe('notion forms helpers', () => {
     expect(properties.title).toEqual([['小鹿']])
     expect(properties.phone).toEqual([['13800138000']])
     expect(properties.selectText).toEqual([['选项 1']])
+    expect(properties.select).toEqual([['渠道合作']])
     expect(properties.place).toEqual([
       ['‣', [['plc', { lat: 34.42, lon: 113.85 }]]]
+    ])
+  })
+
+  it('serializes selected place coordinates without geocoding again', async () => {
+    const properties = await buildFormProperties(
+      recordMap.collection.collection1.value,
+      {
+        place: {
+          label: '当前位置',
+          lat: 34.1,
+          lon: 113.2
+        }
+      },
+      {
+        resolvePlace: async () => {
+          throw new Error('should not geocode resolved coordinates')
+        }
+      }
+    )
+
+    expect(properties.place).toEqual([
+      ['‣', [['plc', { lat: 34.1, lon: 113.2 }]]]
     ])
   })
 

@@ -26,6 +26,10 @@ describe('NotionFormView', () => {
                   name: '您的电话号码',
                   type: 'phone_number'
                 },
+                place: {
+                  name: '您的地址',
+                  type: 'place'
+                },
                 createdBy: {
                   name: '回复者',
                   type: 'created_by'
@@ -96,7 +100,11 @@ describe('NotionFormView', () => {
     expect(screen.getByLabelText('您的姓名')).toBeInTheDocument()
     expect(screen.getByLabelText('人员')).toBeInTheDocument()
     expect(screen.getByLabelText('您的电话号码')).toBeInTheDocument()
-    expect(screen.getByLabelText('合作方式及意向')).toBeInTheDocument()
+    expect(screen.getByLabelText('您的地址')).toBeInTheDocument()
+
+    const intentField = screen.getByLabelText('合作方式及意向')
+    expect(intentField.tagName).toBe('TEXTAREA')
+    expect(screen.getByRole('button', { name: '选项 1' })).toBeInTheDocument()
     expect(
       screen.getByRole('button', {
         name: '提交'
