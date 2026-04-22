@@ -12,10 +12,9 @@ const CONFIG = {
   PROXIO_HERO_TITLE_2: '射频抗衰新宠 风靡明星圈的抗衰答案', // 英雄区文字
   // 英雄区两个按钮，如果TEXT留空则隐藏按钮
   PROXIO_HERO_BUTTON_1_TEXT: '中国区官网', // 英雄区按钮
-  PROXIO_HERO_BUTTON_1_URL:
-    '#', // 英雄区按钮
+  PROXIO_HERO_BUTTON_1_URL: 'xiaolumed.com', // 英雄区按钮
   PROXIO_HERO_BUTTON_2_TEXT: '了解射频抗衰原理', // 英雄区按钮
-  PROXIO_HERO_BUTTON_2_URL: '#', // 英雄区按钮
+  PROXIO_HERO_BUTTON_2_URL: '/article/RFkangshai', // 英雄区按钮
   PROXIO_HERO_BUTTON_2_ICON: '/images/starter/github-mark.svg', // 英雄区按钮2的图标，不需要则留空
 
   // 英雄区配图，如需隐藏，改为空值即可 ''
@@ -59,7 +58,7 @@ const CONFIG = {
   PROXIO_FEATURE_3_TEXT_1: '统一标准拍摄，时间轴复盘变化。',
 
   PROXIO_FEATURE_BUTTON_TEXT: '查看全部记录', // 按钮文字
-  PROXIO_FEATURE_BUTTON_URL: 'https://xiaolu.love', // 按钮跳转
+  PROXIO_FEATURE_BUTTON_URL: '/category/真人体验', // 按钮跳转
 
   // 首页生涯区块
   PROXIO_CAREER_ENABLE: true, // 区块开关
@@ -227,22 +226,22 @@ const CONFIG = {
     {
       name: 'SHOWLOOK小鹿医疗',
       menus: [
-        { title: 'SHOWLOOK品牌介绍', href: 'https://xiaolu.love' },
+        { title: 'SHOWLOOK品牌介绍', href: '/article/showlook' },
         {
           title: 'FawnPower肤动能 FP01',
-          href: 'https://xiaolu.love',
+          href: '/article/FP01',
         },
         {
           title: '顾客体验',
-          href: 'https://xiaolu.love'
+          href: '/tag/%E9%A1%BE%E5%AE%A2%E4%BD%93%E9%AA%8C'
         },
         {
           title: '案例/对比/记录',
-          href: 'https://xiaolu.love'
+          href: '/tag/%E6%A1%88%E4%BE%8B%2F%E5%AF%B9%E6%AF%94%2F%E8%BF%87%E7%A8%8B%E8%AE%B0%E5%BD%95'
         },
         {
           title: '相关报道',
-          href: 'https://xiaolu.love',
+          href: '/tag/%E5%AA%92%E4%BD%93%E6%91%98%E8%A6%81',
         }
       ]
     }
@@ -271,7 +270,7 @@ const CONFIG = {
   PROXIO_CTA_DESCRIPTION:
     '如果有意引进FawnPower FP01，可点击下方按钮联系SHOWLOOK市场专员。他们将提供产品资料、培训与交付流程说明',
   PROXIO_CTA_BUTTON: true, // 是否显示按钮
-  PROXIO_CTA_BUTTON_URL: '#',
+  PROXIO_CTA_BUTTON_URL: '/BM',
   PROXIO_CTA_BUTTON_TEXT: '与SHOWLOOK市场专员聊一聊',
 
   PROXIO_POST_REDIRECT_ENABLE: true, // 默認開啟重定向
