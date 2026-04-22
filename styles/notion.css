@@ -202,11 +202,54 @@
 
 .notion-form-view {
   width: 100%;
+  --notion-form-title: #111827;
+  --notion-form-text: #111827;
+  --notion-form-muted: #4b5563;
+  --notion-form-label-color: #111827;
+  --notion-form-input-bg: #ffffff;
+  --notion-form-input-text: #111827;
+  --notion-form-input-border: rgba(15, 23, 42, 0.12);
+  --notion-form-input-focus-border: rgba(37, 99, 235, 0.45);
+  --notion-form-input-focus-ring: rgba(37, 99, 235, 0.12);
+  --notion-form-placeholder: #94a3b8;
+  --notion-form-button-bg: #111827;
+  --notion-form-button-text: #ffffff;
+  --notion-form-button-shadow: rgba(15, 23, 42, 0.18);
+  --notion-form-success-bg: rgba(34, 197, 94, 0.12);
+  --notion-form-success-text: #166534;
+  --notion-form-error-bg: rgba(239, 68, 68, 0.12);
+  --notion-form-error-text: #b91c1c;
 }
 
 .notion-form-view-empty {
   padding: 16px 0;
-  color: var(--fg-color-3);
+  color: var(--notion-form-muted);
+}
+
+html.dark .notion-form-view,
+.dark .notion-form-view,
+.dark-mode .notion-form-view {
+  --notion-form-title: #f8fafc;
+  --notion-form-text: rgba(248, 250, 252, 0.94);
+  --notion-form-muted: rgba(226, 232, 240, 0.72);
+  --notion-form-label-color: rgba(248, 250, 252, 0.9);
+  --notion-form-input-bg: rgba(255, 255, 255, 0.96);
+  --notion-form-input-text: #0f172a;
+  --notion-form-input-border: rgba(255, 255, 255, 0.18);
+  --notion-form-input-focus-border: rgba(255, 255, 255, 0.54);
+  --notion-form-input-focus-ring: rgba(255, 255, 255, 0.16);
+  --notion-form-placeholder: #94a3b8;
+  --notion-form-button-bg: #ffffff;
+  --notion-form-button-text: #0f172a;
+  --notion-form-button-shadow: rgba(255, 255, 255, 0.16);
+  --notion-form-success-bg: rgba(34, 197, 94, 0.16);
+  --notion-form-success-text: #dcfce7;
+  --notion-form-error-bg: rgba(239, 68, 68, 0.18);
+  --notion-form-error-text: #fee2e2;
+}
+
+.notion-form-view .notion-collection-header-title {
+  color: var(--notion-form-title);
 }
 
 .notion-form-collection {
@@ -218,12 +261,13 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  max-width: 560px;
   padding: 20px 0 6px;
 }
 
 .notion-form-description {
   margin: 0;
-  color: var(--fg-color-3);
+  color: var(--notion-form-muted);
   line-height: 1.7;
 }
 
@@ -236,26 +280,33 @@
 .notion-form-label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--fg-color-4);
+  color: var(--notion-form-label-color);
 }
 
 .notion-form-input {
   width: 100%;
   min-height: 44px;
-  border: 1px solid var(--fg-color-1);
-  border-radius: 12px;
-  background: var(--bg-color);
-  color: var(--fg-color);
+  border: 1px solid var(--notion-form-input-border);
+  border-radius: 16px;
+  background: var(--notion-form-input-bg);
+  color: var(--notion-form-input-text);
   padding: 0 14px;
   font: inherit;
+  box-shadow: 0 10px 28px -22px var(--notion-form-button-shadow);
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .notion-form-input:focus {
-  border-color: rgba(46, 170, 220, 0.65);
-  box-shadow: 0 0 0 3px rgba(46, 170, 220, 0.12);
+  border-color: var(--notion-form-input-focus-border);
+  box-shadow: 0 0 0 4px var(--notion-form-input-focus-ring);
+  transform: translateY(-1px);
+}
+
+.notion-form-input::placeholder {
+  color: var(--notion-form-placeholder);
 }
 
 .notion-form-textarea {
@@ -272,7 +323,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--fg-color-4);
+  color: var(--notion-form-label-color);
   font-weight: 500;
 }
 
@@ -288,13 +339,13 @@
 }
 
 .notion-form-message-success {
-  background: var(--notion-green_background);
-  color: rgb(24, 98, 54);
+  background: var(--notion-form-success-bg);
+  color: var(--notion-form-success-text);
 }
 
 .notion-form-message-error {
-  background: var(--notion-red_background);
-  color: rgb(140, 46, 46);
+  background: var(--notion-form-error-bg);
+  color: var(--notion-form-error-text);
 }
 
 .notion-form-submit {
@@ -303,19 +354,22 @@
   height: 44px;
   border: 0;
   border-radius: 999px;
-  background: var(--fg-color-4);
-  color: #fff;
+  background: var(--notion-form-button-bg);
+  color: var(--notion-form-button-text);
   padding: 0 20px;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 14px 30px -22px var(--notion-form-button-shadow);
   transition:
     transform 0.2s ease,
-    opacity 0.2s ease;
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .notion-form-submit:hover {
   transform: translateY(-1px);
+  box-shadow: 0 18px 36px -22px var(--notion-form-button-shadow);
 }
 
 .notion-form-submit:disabled {
