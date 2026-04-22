@@ -13,6 +13,9 @@ module.exports = {
     password: process.env.NEXT_PUBLIC_NOTION_PROPERTY_PASSWORD || 'password',
     unlock_scope:
       process.env.NEXT_PUBLIC_NOTION_PROPERTY_UNLOCK_SCOPE || 'unlock_scope',
+    show_page_properties:
+      process.env.NEXT_PUBLIC_NOTION_PROPERTY_SHOW_PAGE_PROPERTIES ||
+      'show_page_properties',
     type: process.env.NEXT_PUBLIC_NOTION_PROPERTY_TYPE || 'type', // 文章类型，
     type_post: process.env.NEXT_PUBLIC_NOTION_PROPERTY_TYPE_POST || 'Post', // 当type文章类型与此值相同时，为博文。
     type_page: process.env.NEXT_PUBLIC_NOTION_PROPERTY_TYPE_PAGE || 'Page', // 当type文章类型与此值相同时，为单页。

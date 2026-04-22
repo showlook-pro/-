@@ -1,13 +1,93 @@
 import NotionFormView from '@/components/notion/NotionFormView'
+import { isShowPagePropertiesField } from '@/lib/notion/pageProperties'
 import { getRecordValue, isFormCollectionView } from '@/lib/notion/forms'
 import { useEffect, useMemo, useState } from 'react'
 import { useNotionContext } from 'react-notion-x'
-import { Collection as DefaultCollection } from 'react-notion-x/build/third-party/collection'
+import {
+  Collection as DefaultCollection,
+  Property as DefaultProperty
+} from 'react-notion-x/build/third-party/collection'
 
 const getViewLabel = view => view?.name || (view?.type === 'table' ? '表格' : '视图')
 
+const getCollectionPagePropertyIds = (collection, schemas) => {
+  let propertyIds = Object.keys(schemas || {}).filter(id => id !== 'title')
+
+  if (collection?.format?.property_visibility) {
+    propertyIds = propertyIds.filter(id => {
+      const visibility = collection.format.property_visibility.find(
+        property => property.property === id
+      )?.visibility
+
+      return visibility !== 'hide'
+    })
+  }
+
+  if (collection?.format?.collection_page_properties) {
+    const idToIndex = Object.fromEntries(
+      collection.format.collection_page_properties.map((property, index) => [
+        property.property,
+        index
+      ])
+    )
+
+    propertyIds.sort((left, right) => (idToIndex[left] ?? 999) - (idToIndex[right] ?? 999))
+  } else {
+    propertyIds.sort((left, right) =>
+      String(schemas[left]?.name || '').localeCompare(String(schemas[right]?.name || ''))
+    )
+  }
+
+  return propertyIds.filter(propertyId => !isShowPagePropertiesField(schemas[propertyId]))
+}
+
+function NotionCollectionPageProperties({ block, className, recordMap }) {
+  const collection = getRecordValue(recordMap?.collection, block?.parent_id)
+  const schemas = collection?.schema
+
+  if (!collection || !schemas) {
+    return null
+  }
+
+  const propertyIds = getCollectionPagePropertyIds(collection, schemas)
+
+  return (
+    <div className='notion-collection-page-properties'>
+      <div className={`notion-collection-row ${className || ''}`}>
+        <div className='notion-collection-row-body'>
+          {propertyIds.map(propertyId => {
+            const schema = schemas[propertyId]
+            if (!schema) return null
+
+            return (
+              <div className='notion-collection-row-property' key={propertyId}>
+                <div className='notion-collection-column-title'>
+                  <span>{schema.name}</span>
+                </div>
+                <div className='notion-collection-row-value'>
+                  <DefaultProperty
+                    block={block}
+                    collection={collection}
+                    data={block?.properties?.[propertyId]}
+                    pageHeader
+                    propertyId={propertyId}
+                    schema={schema}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function NotionCollection({ block, className, ctx }) {
   const { recordMap } = useNotionContext()
+  const isCollectionPage =
+    block?.type === 'page' && block?.parent_table === 'collection'
+
   const viewIds = useMemo(
     () => (Array.isArray(block?.view_ids) ? block.view_ids : []),
     [block?.view_ids]
@@ -27,6 +107,16 @@ export default function NotionCollection({ block, className, ctx }) {
   useEffect(() => {
     setActiveViewId(viewIds[0])
   }, [viewIds])
+
+  if (isCollectionPage) {
+    return (
+      <NotionCollectionPageProperties
+        block={block}
+        className={className}
+        recordMap={recordMap}
+      />
+    )
+  }
 
   if (!hasFormView || !viewIds.length) {
     return <DefaultCollection block={block} className={className} ctx={ctx} />

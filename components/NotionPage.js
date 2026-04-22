@@ -18,6 +18,7 @@ const NotionPage = ({ post, className }) => {
   const POST_DISABLE_GALLERY_CLICK = siteConfig('POST_DISABLE_GALLERY_CLICK')
   const POST_DISABLE_DATABASE_CLICK = siteConfig('POST_DISABLE_DATABASE_CLICK')
   const SPOILER_TEXT_TAG = siteConfig('SPOILER_TEXT_TAG')
+  const shouldShowCollectionPageProperties = Boolean(post?.show_page_properties)
 
   const zoom =
     isBrowser &&
@@ -99,22 +100,23 @@ const NotionPage = ({ post, className }) => {
       })
     }
 
-    // 查找所有具有 'notion-collection-page-properties' 类的元素,删除notion自带的页面properties
+    if (shouldShowCollectionPageProperties) {
+      return
+    }
+
+    // 默认隐藏数据库详情页属性，仅对显式声明了控制字段的数据库保留
     const timer = setTimeout(() => {
-      // 查找所有具有 'notion-collection-page-properties' 类的元素
       const elements = document.querySelectorAll(
         '.notion-collection-page-properties'
       )
 
-      // 遍历这些元素并将其从 DOM 中移除
       elements?.forEach(element => {
         element?.remove()
       })
-    }, 1000) // 1000 毫秒 = 1 秒
+    }, 1000)
 
-    // 清理定时器，防止组件卸载时执行
     return () => clearTimeout(timer)
-  }, [post])
+  }, [post, shouldShowCollectionPageProperties])
 
   return (
     <div
