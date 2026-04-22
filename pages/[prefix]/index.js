@@ -12,6 +12,7 @@ import {
 } from '@/lib/password'
 import { checkSlugHasNoSlash, processPostData } from '@/lib/utils/post'
 import { DynamicLayout } from '@/themes/theme'
+import { createNotFoundStaticPropsResult } from '@/lib/router/staticProps'
 import md5 from 'js-md5'
 import { useRouter } from 'next/router'
 import { idToUuid } from 'notion-utils'
@@ -155,8 +156,7 @@ export async function getStaticProps({ params: { prefix }, locale }) {
     }
   }
   if (!props?.post) {
-    // 无法获取文章
-    props.post = null
+    return createNotFoundStaticPropsResult(props.NOTION_CONFIG)
   } else {
     await processPostData(props, from)
   }

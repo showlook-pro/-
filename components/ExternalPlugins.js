@@ -12,6 +12,7 @@ import ExternalScript from './ExternalScript'
 import WebWhiz from './Webwhiz'
 import { useGlobal } from '@/lib/global'
 import IconFont from './IconFont'
+import { isErrorPageRoute } from '@/lib/router/pageStatus'
 
 /**
  * 各种插件脚本
@@ -164,6 +165,7 @@ const ExternalPlugin = props => {
   }
 
   const router = useRouter()
+  const isErrorPage = isErrorPageRoute({ router, pageProps: props })
   useEffect(() => {
     // 异步渲染谷歌广告
     if (ADSENSE_GOOGLE_ID) {
@@ -213,7 +215,9 @@ const ExternalPlugin = props => {
       {COMMENT_TWIKOO_COUNT_ENABLE && <TwikooCommentCounter {...props} />}
       {RIBBON && <Ribbon />}
       {DIFY_CHATBOT_ENABLED && <DifyChatbot />}
-      {CUSTOM_RIGHT_CLICK_CONTEXT_MENU && <CustomContextMenu {...props} />}
+      {CUSTOM_RIGHT_CLICK_CONTEXT_MENU && !isErrorPage && (
+        <CustomContextMenu {...props} />
+      )}
       {!CAN_COPY && <DisableCopy />}
       {WEB_WHIZ_ENABLED && <WebWhiz />}
       {AD_WWADS_BLOCK_DETECT && <AdBlockDetect />}

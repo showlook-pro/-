@@ -17,6 +17,8 @@ export async function getStaticProps(req) {
   const { locale } = req
 
   const props = (await getGlobalData({ from: '404', locale })) || {}
+  props.isNotFoundPage = true
+  props.statusCode = 404
   return { props }
 }
 

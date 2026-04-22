@@ -1,6 +1,7 @@
 import BLOG from '@/blog.config'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData, getPost } from '@/lib/db/getSiteData'
+import { createNotFoundStaticPropsResult } from '@/lib/router/staticProps'
 import { checkSlugHasOneSlash, processPostData } from '@/lib/utils/post'
 import { idToUuid } from 'notion-utils'
 import Slug from '..'
@@ -67,8 +68,7 @@ export async function getStaticProps({ params: { prefix, slug }, locale }) {
   }
 
   if (!props?.post) {
-    // 无法获取文章
-    props.post = null
+    return createNotFoundStaticPropsResult(props.NOTION_CONFIG)
   } else {
     await processPostData(props, from)
   }
