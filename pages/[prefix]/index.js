@@ -125,7 +125,7 @@ export async function getStaticPaths() {
     .map(row => ({ params: { prefix: row.slug } }))
   return {
     paths: paths,
-    fallback: true
+    fallback: 'blocking'
   }
 }
 

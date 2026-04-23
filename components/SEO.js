@@ -292,103 +292,117 @@ const getSEOMeta = (props, router, locale) => {
   const keyword = router?.query?.s
 
   const TITLE = siteConfig('TITLE')
+  const siteTitle = siteInfo?.title || TITLE || siteConfig('AUTHOR') || 'Loading'
+  const siteDescription = siteInfo?.description || siteConfig('BIO') || ''
+  const siteImage = siteInfo?.pageCover || '/bg_image.jpg'
+
+  if (router?.isFallback) {
+    return {
+      title: `${siteTitle} | loading`,
+      description: siteDescription,
+      image: siteImage,
+      type: 'website'
+    }
+  }
+
   switch (router.route) {
     case '/':
       return {
-        title: `${siteInfo?.title || TITLE}`,
-        description: `${siteInfo?.description}`,
-        image: `${siteInfo?.pageCover}`,
+        title: siteTitle,
+        description: siteDescription,
+        image: siteImage,
         slug: '',
         type: 'website'
       }
     case '/archive':
       return {
-        title: `${locale.NAV.ARCHIVE} | ${siteInfo?.title}`,
-        description: `${siteInfo?.description}`,
-        image: `${siteInfo?.pageCover}`,
+        title: `${locale.NAV.ARCHIVE} | ${siteTitle}`,
+        description: siteDescription,
+        image: siteImage,
         slug: 'archive',
         type: 'website'
       }
     case '/page/[page]':
       return {
-        title: `${page} | Page | ${siteInfo?.title}`,
-        description: `${siteInfo?.description}`,
-        image: `${siteInfo?.pageCover}`,
+        title: `${page} | Page | ${siteTitle}`,
+        description: siteDescription,
+        image: siteImage,
         slug: 'page/' + page,
         type: 'website'
       }
     case '/category/[category]':
       return {
-        title: `${category} | ${locale.COMMON.CATEGORY} | ${siteInfo?.title}`,
-        description: `${siteInfo?.description}`,
+        title: `${category} | ${locale.COMMON.CATEGORY} | ${siteTitle}`,
+        description: siteDescription,
         slug: 'category/' + category,
-        image: `${siteInfo?.pageCover}`,
+        image: siteImage,
         type: 'website'
       }
     case '/category/[category]/page/[page]':
       return {
-        title: `${category} | ${locale.COMMON.CATEGORY} | ${siteInfo?.title}`,
-        description: `${siteInfo?.description}`,
+        title: `${category} | ${locale.COMMON.CATEGORY} | ${siteTitle}`,
+        description: siteDescription,
         slug: 'category/' + category,
-        image: `${siteInfo?.pageCover}`,
+        image: siteImage,
         type: 'website'
       }
     case '/tag/[tag]':
     case '/tag/[tag]/page/[page]':
       return {
-        title: `${tag} | ${locale.COMMON.TAGS} | ${siteInfo?.title}`,
-        description: `${siteInfo?.description}`,
-        image: `${siteInfo?.pageCover}`,
+        title: `${tag} | ${locale.COMMON.TAGS} | ${siteTitle}`,
+        description: siteDescription,
+        image: siteImage,
         slug: 'tag/' + tag,
         type: 'website'
       }
     case '/search':
       return {
-        title: `${keyword || ''}${keyword ? ' | ' : ''}${locale.NAV.SEARCH} | ${siteInfo?.title}`,
-        description: `${siteInfo?.description}`,
-        image: `${siteInfo?.pageCover}`,
+        title: `${keyword || ''}${keyword ? ' | ' : ''}${locale.NAV.SEARCH} | ${siteTitle}`,
+        description: siteDescription,
+        image: siteImage,
         slug: 'search',
         type: 'website'
       }
     case '/search/[keyword]':
     case '/search/[keyword]/page/[page]':
       return {
-        title: `${keyword || ''}${keyword ? ' | ' : ''}${locale.NAV.SEARCH} | ${siteInfo?.title}`,
-        description: TITLE,
-        image: `${siteInfo?.pageCover}`,
+        title: `${keyword || ''}${keyword ? ' | ' : ''}${locale.NAV.SEARCH} | ${siteTitle}`,
+        description: TITLE || siteDescription,
+        image: siteImage,
         slug: 'search/' + (keyword || ''),
         type: 'website'
       }
     case '/404':
       return {
-        title: `${siteInfo?.title} | ${locale.NAV.PAGE_NOT_FOUND}`,
-        image: `${siteInfo?.pageCover}`
+        title: `${siteTitle} | ${locale.NAV.PAGE_NOT_FOUND}`,
+        description: siteDescription,
+        image: siteImage
       }
     case '/tag':
       return {
-        title: `${locale.COMMON.TAGS} | ${siteInfo?.title}`,
-        description: `${siteInfo?.description}`,
-        image: `${siteInfo?.pageCover}`,
+        title: `${locale.COMMON.TAGS} | ${siteTitle}`,
+        description: siteDescription,
+        image: siteImage,
         slug: 'tag',
         type: 'website'
       }
     case '/category':
       return {
-        title: `${locale.COMMON.CATEGORY} | ${siteInfo?.title}`,
-        description: `${siteInfo?.description}`,
-        image: `${siteInfo?.pageCover}`,
+        title: `${locale.COMMON.CATEGORY} | ${siteTitle}`,
+        description: siteDescription,
+        image: siteImage,
         slug: 'category',
         type: 'website'
       }
     default:
       return {
         title: post
-          ? `${post?.title} | ${siteInfo?.title}`
-          : `${siteInfo?.title} | loading`,
-        description: post?.summary,
+          ? `${post?.title} | ${siteTitle}`
+          : `${siteTitle} | loading`,
+        description: post?.summary || siteDescription,
         type: post?.type,
         slug: post?.slug,
-        image: post?.pageCoverThumbnail || `${siteInfo?.pageCover}`,
+        image: post?.pageCoverThumbnail || siteImage,
         category: post?.category?.[0],
         tags: post?.tags
       }

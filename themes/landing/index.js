@@ -9,6 +9,7 @@
 import Loading from '@/components/Loading'
 import NotionPage from '@/components/NotionPage'
 import { siteConfig } from '@/lib/config'
+import { resolvePostRedirectTarget } from '@/lib/router/postRedirect'
 import { isBrowser } from '@/lib/utils'
 import { useRouter } from 'next/router'
 import Features from './components/Features'
@@ -81,15 +82,19 @@ const LayoutSlug = props => {
     isBrowser &&
     router.route === '/[prefix]/[slug]'
   ) {
-    const redirectUrl =
-      siteConfig('LANDING_POST_REDIRECT_URL', null, CONFIG) +
-      router.asPath.replace('?theme=landing', '')
-    router.push(redirectUrl)
-    return (
-      <div id='theme-landing'>
-        <Loading />
-      </div>
-    )
+    const redirectUrl = resolvePostRedirectTarget({
+      redirectBaseUrl: siteConfig('LANDING_POST_REDIRECT_URL', null, CONFIG),
+      asPath: router.asPath,
+      currentHref: window.location.href
+    })
+    if (redirectUrl) {
+      window.location.assign(redirectUrl)
+      return (
+        <div id='theme-landing'>
+          <Loading />
+        </div>
+      )
+    }
   }
 
   return (

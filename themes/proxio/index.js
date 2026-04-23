@@ -30,6 +30,7 @@ import DashboardBody from '@/components/ui/dashboard/DashboardBody'
 import DashboardHeader from '@/components/ui/dashboard/DashboardHeader'
 import { useGlobal } from '@/lib/global'
 import { loadWowJS } from '@/lib/plugins/wow'
+import { resolvePostRedirectTarget } from '@/lib/router/postRedirect'
 import { SignIn, SignUp } from '@clerk/nextjs'
 import SmartLink from '@/components/SmartLink'
 import { ArticleLock } from './components/ArticleLock'
@@ -168,15 +169,19 @@ const LayoutSlug = props => {
         isBrowser &&
         router.route === '/[prefix]/[slug]'
     ) {
-        const redirectUrl =
-            siteConfig('PROXIO_POST_REDIRECT_URL') +
-            router.asPath.replace('?theme=landing', '')
-        router.push(redirectUrl)
-        return (
-            <div id='theme-proxio'>
-                <Loading />
-            </div>
-        )
+        const redirectUrl = resolvePostRedirectTarget({
+            redirectBaseUrl: siteConfig('PROXIO_POST_REDIRECT_URL'),
+            asPath: router.asPath,
+            currentHref: window.location.href
+        })
+        if (redirectUrl) {
+            window.location.assign(redirectUrl)
+            return (
+                <div id='theme-proxio'>
+                    <Loading />
+                </div>
+            )
+        }
     }
 
     return (
