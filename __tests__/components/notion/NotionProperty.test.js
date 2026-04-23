@@ -15,7 +15,7 @@ describe('NotionProperty', () => {
         inline
         pagePropertiesMode='showclose'
         schema={{
-          name: '您的电话号码',
+          name: '电话号码',
           type: 'phone_number'
         }}
       />
@@ -62,7 +62,7 @@ describe('NotionProperty', () => {
         inline
         pagePropertiesMode='showclose'
         schema={{
-          name: '您的地址',
+          name: '地址',
           type: 'place'
         }}
       />
@@ -73,5 +73,25 @@ describe('NotionProperty', () => {
 
     expect(row).toBeInTheDocument()
     expect(row).toHaveTextContent('查看定位')
+  })
+
+  it('maps the form intent field to the requested display label', () => {
+    render(
+      <NotionProperty
+        data={[['希望合作']]}
+        inline
+        pagePropertiesMode='showclose'
+        schema={{
+          name: '意向详情',
+          type: 'text'
+        }}
+      />
+    )
+
+    const label = screen.getByText('合作方式与意向：')
+    const row = label.closest('.notion-property-inline-row')
+
+    expect(row).toBeInTheDocument()
+    expect(row).toHaveTextContent('希望合作')
   })
 })

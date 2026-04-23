@@ -8,19 +8,26 @@ import { Property as DefaultProperty } from 'react-notion-x/build/third-party/co
 const getBlockTitle = block =>
   String(block?.properties?.title?.[0]?.[0] || '').trim()
 
-const INLINE_PROMINENT_PROPERTY_NAMES = new Set([
-  '合作方式与意向',
-  '您的地址',
-  '您的电话号码'
-])
+const INLINE_PROMINENT_PROPERTY_LABELS = {
+  合作方式与意向: '合作方式与意向',
+  合作方式及意向: '合作方式与意向',
+  意向详情: '合作方式与意向',
+  您的地址: '您的地址',
+  地址: '您的地址',
+  您的电话号码: '您的电话号码',
+  电话号码: '您的电话号码'
+}
 
 const normalizePropertyName = name => String(name || '').trim()
 
+const getProminentInlineLabel = schema =>
+  INLINE_PROMINENT_PROPERTY_LABELS[normalizePropertyName(schema?.name)] || ''
+
 const isProminentInlineProperty = schema =>
-  INLINE_PROMINENT_PROPERTY_NAMES.has(normalizePropertyName(schema?.name))
+  Boolean(getProminentInlineLabel(schema))
 
 const formatInlineLabel = schema => {
-  const label = normalizePropertyName(schema?.name).replace(/[：:]+$/, '')
+  const label = getProminentInlineLabel(schema).replace(/[：:]+$/, '')
   return label ? `${label}：` : ''
 }
 
