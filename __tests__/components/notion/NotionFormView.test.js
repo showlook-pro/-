@@ -147,4 +147,41 @@ describe('NotionFormView', () => {
     expect(screen.getByText(MAINLAND_PHONE_ERROR_MESSAGE)).toBeInTheDocument()
     expect(global.fetch).not.toHaveBeenCalled()
   })
+
+  it('uses friendly city wording after resolving a place field', () => {
+    const getCurrentPosition = jest.fn(success => {
+      success({
+        coords: {
+          latitude: 0,
+          longitude: 0
+        }
+      })
+    })
+
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition
+      }
+    })
+
+    render(
+      <NotionFormView
+        block={{
+          id: 'collectionBlock1',
+          collection_id: 'collection1',
+          view_ids: ['formView']
+        }}
+      />
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '一键获取您所在的城市' })
+    )
+
+    expect(getCurrentPosition).toHaveBeenCalled()
+    expect(screen.getByText('已获取城市信息')).toBeInTheDocument()
+    expect(screen.queryByText(/已锁定坐标/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/0\.000000/)).not.toBeInTheDocument()
+  })
 })

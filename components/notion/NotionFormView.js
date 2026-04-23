@@ -2,6 +2,7 @@ import {
   getFormDefinition,
   validateFormValues
 } from '@/lib/notion/forms'
+import { hasResolvedPlaceCoordinates } from '@/lib/notion/place'
 import { useMemo, useState } from 'react'
 import { useNotionContext } from 'react-notion-x'
 
@@ -11,9 +12,8 @@ const EMPTY_PLACE_VALUE = {
   lat: null,
   lon: null
 }
-
-const isResolvedPlaceValue = value =>
-  Number.isFinite(Number(value?.lat)) && Number.isFinite(Number(value?.lon))
+const PLACE_LOCATION_BUTTON_LABEL = '一键获取您所在的城市'
+const PLACE_LOCATION_SELECTED_MESSAGE = '已获取城市信息'
 
 const getFieldValue = (values, field) => {
   const currentValue = values[field.id]
@@ -71,13 +71,13 @@ function NotionTextSuggestions({ disabled, field, onChange, value }) {
   )
 }
 
-function NotionPlaceInput({ disabled, field, onChange, value }) {
+function NotionPlaceInput({ disabled, field, inputId, onChange, value }) {
   const [locationState, setLocationState] = useState({
     status: 'idle',
     message: ''
   })
 
-  const hasCoordinates = isResolvedPlaceValue(value)
+  const hasCoordinates = hasResolvedPlaceCoordinates(value)
 
   const handleLocateCurrentPosition = () => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -121,17 +121,18 @@ function NotionPlaceInput({ disabled, field, onChange, value }) {
   return (
     <div className='notion-form-place'>
       <button
+        aria-label={PLACE_LOCATION_BUTTON_LABEL}
         className='notion-form-place-action'
         disabled={disabled}
+        id={inputId}
         onClick={handleLocateCurrentPosition}
         type='button'>
-        {hasCoordinates ? '重新获取当前位置' : '获取当前位置'}
+        {PLACE_LOCATION_BUTTON_LABEL}
       </button>
 
       {hasCoordinates && (
         <div className='notion-form-place-status notion-form-place-status-selected'>
-          位置已锁定。
-          已锁定坐标 {Number(value.lat).toFixed(6)}, {Number(value.lon).toFixed(6)}
+          {PLACE_LOCATION_SELECTED_MESSAGE}
         </div>
       )}
 
@@ -264,6 +265,7 @@ const renderFieldControl = ({ disabled, field, onChange, value }) => {
         <NotionPlaceInput
           disabled={disabled}
           field={field}
+          inputId={commonProps.id}
           onChange={onChange}
           value={value}
         />

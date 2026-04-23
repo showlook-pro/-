@@ -161,12 +161,13 @@ describe('notion forms helpers', () => {
       {
         title: '小鹿',
         phone: '+86 138 0013 8000',
-        place: '郑州临空生物医药园',
+        place: {
+          label: '当前位置',
+          lat: 34.42,
+          lon: 113.85
+        },
         selectText: '选项 1',
         select: '渠道合作'
-      },
-      {
-        resolvePlace: async () => ({ lat: 34.42, lon: 113.85 })
       }
     )
 
@@ -192,12 +193,38 @@ describe('notion forms helpers', () => {
     })
   })
 
-  it('rejects invalid mainland China phone numbers before serialization', async () => {
-    await expect(
+  it('does not treat empty place coordinates as resolved coordinates', () => {
+    const fields = getEditableFormFields(recordMap.collection.collection1.value)
+
+    expect(
+      validateFormValues(fields, {
+        place: {
+          label: '',
+          lat: null,
+          lon: null
+        }
+      })
+    ).toEqual({
+      place: '请先点击按钮获取当前位置。'
+    })
+
+    expect(() =>
+      buildFormProperties(recordMap.collection.collection1.value, {
+        place: {
+          label: '',
+          lat: null,
+          lon: null
+        }
+      })
+    ).toThrow('请先通过定位按钮获取“您的地址”的坐标。')
+  })
+
+  it('rejects invalid mainland China phone numbers before serialization', () => {
+    expect(() =>
       buildFormProperties(recordMap.collection.collection1.value, {
         phone: '12345'
       })
-    ).rejects.toThrow('请输入有效的中国大陆手机号或固定电话。')
+    ).toThrow('请输入有效的中国大陆手机号或固定电话。')
   })
 
   it('serializes selected place coordinates without geocoding again', async () => {
