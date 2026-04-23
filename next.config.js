@@ -3,6 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const BLOG = require('./blog.config')
 const { extractLangPrefix } = require('./lib/utils/pageId')
+const DEFAULT_SITE_IMAGE = '/images/hero-image.png'
 
 // 打包时是否分析代码
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -145,6 +146,11 @@ const nextConfig = {
     ? undefined
     : () => {
         return [
+          {
+            source: '/bg_image.jpg',
+            destination: DEFAULT_SITE_IMAGE,
+            permanent: true
+          },
           {
             source: '/feed',
             destination: '/rss/feed.xml',

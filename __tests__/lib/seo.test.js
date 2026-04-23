@@ -31,8 +31,8 @@ describe('seo utilities', () => {
   })
 
   it('converts relative assets to absolute URLs', () => {
-    expect(toAbsoluteUrl('/bg_image.jpg', 'https://www.xiaolu.love/')).toBe(
-      'https://www.xiaolu.love/bg_image.jpg'
+    expect(toAbsoluteUrl('/images/hero-image.png', 'https://www.xiaolu.love/')).toBe(
+      'https://www.xiaolu.love/images/hero-image.png'
     )
     expect(toAbsoluteUrl('//cdn.example.com/a.jpg', 'https://xiaolu.love')).toBe(
       'https://cdn.example.com/a.jpg'

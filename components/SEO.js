@@ -5,6 +5,7 @@ import {
   normalizeSiteUrl,
   toAbsoluteUrl
 } from '@/lib/seo'
+import { DEFAULT_SITE_IMAGE } from '@/lib/siteAssets'
 import { loadExternalResource } from '@/lib/utils'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -54,7 +55,7 @@ const SEO = props => {
     keywords = post?.tags?.join(',')
   }
   const url = buildCanonicalUrl(LINK, meta?.slug)
-  const image = toAbsoluteUrl(meta?.image || '/bg_image.jpg', LINK)
+  const image = toAbsoluteUrl(meta?.image || DEFAULT_SITE_IMAGE, LINK)
   const TITLE = siteConfig('TITLE')
   const title = meta?.title || TITLE
   const description = meta?.description || `${siteInfo?.description}`
@@ -318,7 +319,7 @@ const getSEOMeta = (props, router, locale) => {
   const TITLE = siteConfig('TITLE')
   const siteTitle = siteInfo?.title || TITLE || siteConfig('AUTHOR') || 'Loading'
   const siteDescription = siteInfo?.description || siteConfig('BIO') || ''
-  const siteImage = siteInfo?.pageCover || '/bg_image.jpg'
+  const siteImage = siteInfo?.pageCover || DEFAULT_SITE_IMAGE
 
   if (router?.isFallback) {
     return {
