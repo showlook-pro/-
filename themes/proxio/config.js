@@ -12,7 +12,7 @@ const CONFIG = {
   PROXIO_HERO_TITLE_2: '射频抗衰新宠 风靡明星圈的抗衰答案', // 英雄区文字
   // 英雄区两个按钮，如果TEXT留空则隐藏按钮
   PROXIO_HERO_BUTTON_1_TEXT: '中国区官网', // 英雄区按钮
-  PROXIO_HERO_BUTTON_1_URL: 'xiaolumed.com', // 英雄区按钮
+  PROXIO_HERO_BUTTON_1_URL: 'http://wwww.xiaolumed.com', // 英雄区按钮
   PROXIO_HERO_BUTTON_2_TEXT: '了解射频抗衰原理', // 英雄区按钮
   PROXIO_HERO_BUTTON_2_URL: '/article/RFkangshai', // 英雄区按钮
   PROXIO_HERO_BUTTON_2_ICON: '/images/starter/github-mark.svg', // 英雄区按钮2的图标，不需要则留空
