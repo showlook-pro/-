@@ -104,18 +104,6 @@ const NotionPage = ({ post, className }) => {
       })
     }
 
-    // 数据库详情页属性始终由容器页决定是否外露，详情页本身默认隐藏
-    const timer = setTimeout(() => {
-      const elements = document.querySelectorAll(
-        '.notion-collection-page-properties'
-      )
-
-      elements?.forEach(element => {
-        element?.remove()
-      })
-    }, 1000)
-
-    return () => clearTimeout(timer)
   }, [SPOILER_TEXT_TAG, post])
 
   return (

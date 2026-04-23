@@ -1830,6 +1830,10 @@ code[class*='language-'] {
   border-bottom: 0 none;
 }
 
+#notion-article .notion-collection-page-properties {
+  display: none !important;
+}
+
 .notion-property-inline-value {
   display: flex;
   width: 100%;
