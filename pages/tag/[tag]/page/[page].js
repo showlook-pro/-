@@ -1,6 +1,7 @@
 import BLOG from '@/blog.config'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData } from '@/lib/db/getSiteData'
+import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { DynamicLayout } from '@/themes/theme'
 
 const Tag = props => {
@@ -28,7 +29,7 @@ export async function getStaticProps({ params: { tag, page }, locale }) {
   props.page = page
   delete props.allPages
   return {
-    props,
+    props: optimizeStaticPageProps(props, 'LayoutPostList'),
     revalidate: process.env.EXPORT
       ? undefined
       : siteConfig(

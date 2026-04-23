@@ -1,6 +1,7 @@
 import BLOG from '@/blog.config'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData, getPost } from '@/lib/db/getSiteData'
+import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { createNotFoundStaticPropsResult } from '@/lib/router/staticProps'
 import { checkSlugHasOneSlash, processPostData } from '@/lib/utils/post'
 import { idToUuid } from 'notion-utils'
@@ -73,7 +74,7 @@ export async function getStaticProps({ params: { prefix, slug }, locale }) {
     await processPostData(props, from)
   }
   return {
-    props,
+    props: optimizeStaticPageProps(props, 'LayoutSlug'),
     revalidate: process.env.EXPORT
       ? undefined
       : siteConfig(

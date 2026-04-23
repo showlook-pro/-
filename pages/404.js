@@ -1,6 +1,7 @@
 import BLOG from '@/blog.config'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData } from '@/lib/db/getSiteData'
+import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { DynamicLayout } from '@/themes/theme'
 
 /**
@@ -19,7 +20,7 @@ export async function getStaticProps(req) {
   const props = (await getGlobalData({ from: '404', locale })) || {}
   props.isNotFoundPage = true
   props.statusCode = 404
-  return { props }
+  return { props: optimizeStaticPageProps(props, 'Layout404') }
 }
 
 export default NoFound

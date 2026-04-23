@@ -5,6 +5,7 @@ import { siteConfig } from '@/lib/config'
 import { getGlobalData, getPost } from '@/lib/db/getSiteData'
 import { useGlobal } from '@/lib/global'
 import { getPageTableOfContents } from '@/lib/notion/getPageTableOfContents'
+import { optimizeStaticPageProps } from '@/lib/pageProps'
 import {
   getPasswordQuery,
   savePathPassword,
@@ -161,7 +162,7 @@ export async function getStaticProps({ params: { prefix }, locale }) {
     await processPostData(props, from)
   }
   return {
-    props,
+    props: optimizeStaticPageProps(props, 'LayoutSlug'),
     revalidate: process.env.EXPORT
       ? undefined
       : siteConfig(

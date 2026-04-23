@@ -3,6 +3,7 @@ import { siteConfig } from '@/lib/config'
 import { getGlobalData, getPostBlocks } from '@/lib/db/getSiteData'
 import { generateRss } from '@/lib/rss'
 import { generateSitemapXml } from '@/lib/sitemap.xml'
+import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { DynamicLayout } from '@/themes/theme'
 import { generateRedirectJson } from '@/lib/redirect'
 import { checkDataFromAlgolia } from '@/lib/plugins/algolia'
@@ -71,7 +72,7 @@ export async function getStaticProps(req) {
   delete props.allPages
 
   return {
-    props,
+    props: optimizeStaticPageProps(props, 'LayoutIndex'),
     revalidate: process.env.EXPORT
       ? undefined
       : siteConfig(

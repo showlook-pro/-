@@ -1,6 +1,7 @@
 import BLOG from '@/blog.config'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData, getPost, getPostBlocks } from '@/lib/db/getSiteData'
+import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { DynamicLayout } from '@/themes/theme'
 
 /**
@@ -42,7 +43,7 @@ export async function getStaticProps({ locale }) {
   if (!props?.post) {
     props.post = null
     return {
-      props,
+      props: optimizeStaticPageProps(props, 'LayoutDashboard'),
       revalidate: process.env.EXPORT
         ? undefined
         : siteConfig(
@@ -60,7 +61,7 @@ export async function getStaticProps({ locale }) {
 
   delete props.allPages
   return {
-    props,
+    props: optimizeStaticPageProps(props, 'LayoutDashboard'),
     revalidate: process.env.EXPORT
       ? undefined
       : siteConfig(

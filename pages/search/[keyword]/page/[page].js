@@ -2,6 +2,7 @@ import BLOG from '@/blog.config'
 import { getDataFromCache } from '@/lib/cache/cache_manager'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData } from '@/lib/db/getSiteData'
+import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { DynamicLayout } from '@/themes/theme'
 
 const Index = props => {
@@ -39,7 +40,7 @@ export async function getStaticProps({ params: { keyword, page }, locale }) {
   props.page = page
   delete props.allPages
   return {
-    props,
+    props: optimizeStaticPageProps(props, 'LayoutSearch'),
     revalidate: process.env.EXPORT
       ? undefined
       : siteConfig(

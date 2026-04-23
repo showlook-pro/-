@@ -1,6 +1,7 @@
 import BLOG from '@/blog.config'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData } from '@/lib/db/getSiteData'
+import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { isBrowser } from '@/lib/utils'
 import { formatDateFmt } from '@/lib/utils/formatDate'
 import { DynamicLayout } from '@/themes/theme'
@@ -59,7 +60,7 @@ export async function getStaticProps({ locale }) {
   delete props.allPages
 
   return {
-    props,
+    props: optimizeStaticPageProps(props, 'LayoutArchive'),
     revalidate: process.env.EXPORT
       ? undefined
       : siteConfig(

@@ -3,9 +3,9 @@
 
 'use client'
 import Loading from '@/components/Loading'
-import NotionPage from '@/components/NotionPage'
 import { siteConfig } from '@/lib/config'
 import { isBrowser } from '@/lib/utils'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { Career } from './components/Career'
@@ -23,15 +23,10 @@ import { Testimonials } from './components/Testimonials'
 import CONFIG from './config'
 import { Style } from './style'
 // import { MadeWithButton } from './components/MadeWithButton'
-import Comment from '@/components/Comment'
 import replaceSearchResult from '@/components/Mark'
-import ShareBar from '@/components/ShareBar'
-import DashboardBody from '@/components/ui/dashboard/DashboardBody'
-import DashboardHeader from '@/components/ui/dashboard/DashboardHeader'
 import { useGlobal } from '@/lib/global'
 import { loadWowJS } from '@/lib/plugins/wow'
 import { resolvePostRedirectTarget } from '@/lib/router/postRedirect'
-import { SignIn, SignUp } from '@clerk/nextjs'
 import SmartLink from '@/components/SmartLink'
 import { ArticleLock } from './components/ArticleLock'
 import { Banner } from './components/Banner'
@@ -44,6 +39,38 @@ import Lenis from '@/components/Lenis'
 import Announcement from './components/Announcement'
 import CursorDot from '@/components/CursorDot'
 import LoadingCover from './components/LoadingCover'
+
+const NotionPage = dynamic(() => import('@/components/NotionPage'), {
+    ssr: true
+})
+
+const Comment = dynamic(() => import('@/components/Comment'), {
+    ssr: false
+})
+
+const ShareBar = dynamic(() => import('@/components/ShareBar'), {
+    ssr: false
+})
+
+const DashboardHeader = dynamic(
+    () => import('@/components/ui/dashboard/DashboardHeader'),
+    { ssr: false }
+)
+
+const DashboardBody = dynamic(
+    () => import('@/components/ui/dashboard/DashboardBody'),
+    { ssr: false }
+)
+
+const ClerkSignIn = dynamic(
+    () => import('@clerk/nextjs').then(module => module.SignIn),
+    { ssr: false }
+)
+
+const ClerkSignUp = dynamic(
+    () => import('@clerk/nextjs').then(module => module.SignUp),
+    { ssr: false }
+)
 
 /**
  * 布局框架
@@ -255,7 +282,7 @@ const LayoutSearch = props => {
                 }
             })
         }
-    }, [])
+    }, [keyword])
     return (
         <>
             <section className='max-w-7xl mx-auto bg-white pb-10 pt-20 dark:bg-dark lg:pb-20 lg:pt-[120px]'>
@@ -501,7 +528,7 @@ const LayoutSignIn = props => {
                 {/* clerk预置表单 */}
                 {enableClerk && (
                     <div className='flex justify-center py-6'>
-                        <SignIn />
+                        <ClerkSignIn />
                     </div>
                 )}
 
@@ -533,7 +560,7 @@ const LayoutSignUp = props => {
                 {/* clerk预置表单 */}
                 {enableClerk && (
                     <div className='flex justify-center py-6'>
-                        <SignUp />
+                        <ClerkSignUp />
                     </div>
                 )}
 
