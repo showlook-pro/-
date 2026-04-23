@@ -124,6 +124,87 @@ describe('normalizeRecordMap', () => {
     ).toEqual(['newestRow', 'olderRow'])
   })
 
+  it('fills missing collection ids from collection view pointers', () => {
+    const recordMap = {
+      block: {
+        galleryBlock: {
+          value: {
+            id: 'galleryBlock',
+            type: 'collection_view',
+            parent_id: 'page1',
+            view_ids: ['galleryView']
+          }
+        },
+        row1: {
+          value: {
+            id: 'row1',
+            type: 'page',
+            parent_id: 'collection1',
+            parent_table: 'collection',
+            created_time: 10
+          }
+        }
+      },
+      collection_view: {
+        galleryView: {
+          value: {
+            id: 'galleryView',
+            type: 'gallery',
+            format: {
+              collection_pointer: {
+                id: 'collection1'
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const normalized = normalizeRecordMap(recordMap)
+
+    expect(normalized.block.galleryBlock.value.collection_id).toBe(
+      'collection1'
+    )
+    expect(
+      normalized.collection_query.collection1.galleryView.collection_group_results
+        .blockIds
+    ).toEqual(['row1'])
+  })
+
+  it('preserves existing collection ids on collection view blocks', () => {
+    const recordMap = {
+      block: {
+        galleryBlock: {
+          value: {
+            id: 'galleryBlock',
+            type: 'collection_view',
+            collection_id: 'existingCollection',
+            view_ids: ['galleryView']
+          }
+        }
+      },
+      collection_view: {
+        galleryView: {
+          value: {
+            id: 'galleryView',
+            type: 'gallery',
+            format: {
+              collection_pointer: {
+                id: 'otherCollection'
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const normalized = normalizeRecordMap(recordMap)
+
+    expect(normalized.block.galleryBlock.value.collection_id).toBe(
+      'existingCollection'
+    )
+  })
+
   it('derives collection query results from collection pages when no view query exists yet', () => {
     const recordMap = {
       block: {
