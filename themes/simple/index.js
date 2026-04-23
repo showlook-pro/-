@@ -266,26 +266,6 @@ const LayoutSlug = props => {
  */
 const Layout404 = props => {
   const { post } = props
-  const router = useRouter()
-  const waiting404 = siteConfig('POST_WAITING_TIME_FOR_404') * 1000
-  useEffect(() => {
-    // 404
-    if (!post) {
-      setTimeout(
-        () => {
-          if (isBrowser) {
-            const article = document.querySelector('#article-wrapper #notion-article')
-            if (!article) {
-              router.push('/404').then(() => {
-                console.warn('找不到页面', router.asPath)
-              })
-            }
-          }
-        },
-        waiting404
-      )
-    }
-  }, [post])
   return <>404 Not found.</>
 }
 
