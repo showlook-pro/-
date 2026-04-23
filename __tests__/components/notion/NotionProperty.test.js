@@ -8,7 +8,7 @@ jest.mock('react-notion-x/build/third-party/collection', () => ({
 }))
 
 describe('NotionProperty', () => {
-  it('renders selected inline fields with a light label and bold inline value', () => {
+  it('renders inline fields with the Notion property name as label', () => {
     render(
       <NotionProperty
         data={[['13800138000']]}
@@ -21,7 +21,7 @@ describe('NotionProperty', () => {
       />
     )
 
-    const label = screen.getByText('您的电话号码：')
+    const label = screen.getByText('电话号码：')
     const row = label.closest('.notion-property-inline-row')
 
     expect(row).toBeInTheDocument()
@@ -31,7 +31,7 @@ describe('NotionProperty', () => {
     )
   })
 
-  it('keeps non-selected inline fields in the default stacked layout', () => {
+  it('uses the same inline row layout for newly added fields', () => {
     render(
       <NotionProperty
         data={[['默认值']]}
@@ -44,13 +44,14 @@ describe('NotionProperty', () => {
       />
     )
 
-    const label = screen.getByText('其他字段')
+    const label = screen.getByText('其他字段：')
+    const row = label.closest('.notion-property-inline-row')
 
-    expect(label.closest('.notion-property-inline-value')).toBeInTheDocument()
-    expect(label.closest('.notion-property-inline-row')).not.toBeInTheDocument()
+    expect(row).toBeInTheDocument()
+    expect(row).toHaveTextContent('默认值')
   })
 
-  it('uses the same inline row treatment for the selected place field', () => {
+  it('uses the Notion property name for place fields', () => {
     render(
       <NotionProperty
         block={{
@@ -68,30 +69,84 @@ describe('NotionProperty', () => {
       />
     )
 
-    const label = screen.getByText('您的地址：')
+    const label = screen.getByText('地址：')
     const row = label.closest('.notion-property-inline-row')
 
     expect(row).toBeInTheDocument()
     expect(row).toHaveTextContent('查看定位')
   })
 
-  it('maps the form intent field to the requested display label', () => {
+  it('does not rewrite custom intent field names', () => {
     render(
       <NotionProperty
         data={[['希望合作']]}
         inline
         pagePropertiesMode='showclose'
         schema={{
-          name: '意向详情',
+          name: '合作意向方式',
           type: 'text'
         }}
       />
     )
 
-    const label = screen.getByText('合作方式与意向：')
+    const label = screen.getByText('合作意向方式：')
     const row = label.closest('.notion-property-inline-row')
 
     expect(row).toBeInTheDocument()
     expect(row).toHaveTextContent('希望合作')
+  })
+
+  it('formats created time in Chinese Notion-style text', () => {
+    render(
+      <NotionProperty
+        block={{
+          created_time: 1776862736089
+        }}
+        inline
+        pagePropertiesMode='showclose'
+        schema={{
+          name: '提交时间',
+          type: 'created_time'
+        }}
+      />
+    )
+
+    const row = screen
+      .getByText('提交时间：')
+      .closest('.notion-property-inline-row')
+
+    expect(row).toBeInTheDocument()
+    expect(row).toHaveTextContent('2026年4月22日 下午8:58')
+  })
+
+  it('formats Notion date values without English month names', () => {
+    render(
+      <NotionProperty
+        data={[
+          [
+            '‣',
+            [
+              [
+                'd',
+                {
+                  start_date: '2026-04-23'
+                }
+              ]
+            ]
+          ]
+        ]}
+        inline
+        pagePropertiesMode='showclose'
+        schema={{
+          name: '日期',
+          type: 'date'
+        }}
+      />
+    )
+
+    const row = screen.getByText('日期：').closest('.notion-property-inline-row')
+
+    expect(row).toBeInTheDocument()
+    expect(row).toHaveTextContent('2026年4月23日')
   })
 })
