@@ -1800,6 +1800,13 @@ code[class*='language-'] {
   /* cursor: default !important; */
 }
 
+.notion-collection-card[data-notion-collection-link='disabled'],
+.notion-list-item[data-notion-collection-link='disabled'],
+.notion-page-link[data-notion-collection-link='disabled'] {
+  cursor: default;
+  text-decoration: none;
+}
+
 .notion-collection-card-property .notion-link {
   border-bottom: 0 none;
   cursor: pointer;

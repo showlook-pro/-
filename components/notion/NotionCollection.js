@@ -147,12 +147,77 @@ const patchCollectionViewsRecordMap = (recordMap, collection, viewIds) => {
   }
 }
 
-function NonNavigatingPageLink({ children, className, href, ...rest }) {
+const INTERACTIVE_CHILD_SELECTOR =
+  'a,button,input,select,textarea,[role="button"],[role="link"],[tabindex]:not([tabindex="-1"])'
+
+const isInteractiveChildClick = event => {
+  const interactiveElement = event?.target?.closest?.(INTERACTIVE_CHILD_SELECTOR)
+  return interactiveElement && interactiveElement !== event.currentTarget
+}
+
+function NonNavigatingPageLink({ children, className, href, onClick, ...rest }) {
+  const {
+    as,
+    locale,
+    passHref,
+    prefetch,
+    rel,
+    replace,
+    scroll,
+    shallow,
+    target,
+    ...safeRest
+  } = rest
+
+  const handleClick = event => {
+    if (isInteractiveChildClick(event)) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
   return (
-    <div className={className} {...rest}>
+    <div
+      aria-disabled='true'
+      className={className}
+      data-notion-collection-link='disabled'
+      onClick={handleClick}
+      {...safeRest}>
       {children}
     </div>
   )
+}
+
+const shouldDisableCollectionPageLink = props => {
+  const className = String(props?.className || '')
+
+  return (
+    className.includes('notion-collection-card') ||
+    className.includes('notion-list-item') ||
+    className.includes('notion-page-link')
+  )
+}
+
+const withConditionalNonNavigatingLink = (LinkComponent, shouldDisable) => {
+  if (!LinkComponent) {
+    return function ConditionalNonNavigatingLink(props) {
+      return shouldDisable(props) ? (
+        <NonNavigatingPageLink {...props} />
+      ) : (
+        <a {...props} />
+      )
+    }
+  }
+
+  return function ConditionalNonNavigatingLink(props) {
+    return shouldDisable(props) ? (
+      <NonNavigatingPageLink {...props} />
+    ) : (
+      <LinkComponent {...props} />
+    )
+  }
 }
 
 const buildCollectionContext = ({
@@ -176,7 +241,10 @@ const buildCollectionContext = ({
   }
 
   if (pagePropertiesMode === 'showclose') {
-    components.PageLink = NonNavigatingPageLink
+    components.PageLink = withConditionalNonNavigatingLink(
+      components.PageLink,
+      shouldDisableCollectionPageLink
+    )
   }
 
   return {
