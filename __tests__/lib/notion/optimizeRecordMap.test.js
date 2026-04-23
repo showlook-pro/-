@@ -45,6 +45,13 @@ describe('optimizeRecordMapForClientRender', () => {
             format: {}
           }
         }
+      },
+      collection_query: {
+        collection1: {
+          tableView: {
+            blockIds: ['row1']
+          }
+        }
       }
     }
 
@@ -112,6 +119,15 @@ describe('optimizeRecordMapForClientRender', () => {
             }
           }
         }
+      },
+      collection_query: {
+        collection1: {
+          galleryView: {
+            collection_group_results: {
+              blockIds: ['row1']
+            }
+          }
+        }
       }
     }
 
@@ -121,5 +137,79 @@ describe('optimizeRecordMapForClientRender', () => {
     expect(optimized.block['row1-image']).toBeDefined()
     expect(optimized.block['row1-text']).toBeUndefined()
     expect(optimized.block['row1-callout']).toBeUndefined()
+  })
+
+  it('never prunes the root page even when it belongs to the same collection being rendered', () => {
+    const recordMap = {
+      block: {
+        rootPage: {
+          value: {
+            id: 'rootPage',
+            type: 'page',
+            parent_id: 'collection1',
+            parent_table: 'collection',
+            content: ['root-text', 'collectionBlock']
+          }
+        },
+        'root-text': {
+          value: {
+            id: 'root-text',
+            type: 'text',
+            parent_id: 'rootPage'
+          }
+        },
+        collectionBlock: {
+          value: {
+            id: 'collectionBlock',
+            type: 'collection_view',
+            parent_id: 'rootPage',
+            collection_id: 'collection1',
+            view_ids: ['tableView']
+          }
+        },
+        row1: {
+          value: {
+            id: 'row1',
+            type: 'page',
+            parent_id: 'collection1',
+            parent_table: 'collection',
+            content: ['row1-text']
+          }
+        },
+        'row1-text': {
+          value: {
+            id: 'row1-text',
+            type: 'text',
+            parent_id: 'row1'
+          }
+        }
+      },
+      collection_view: {
+        tableView: {
+          value: {
+            id: 'tableView',
+            type: 'table',
+            format: {}
+          }
+        }
+      },
+      collection_query: {
+        collection1: {
+          tableView: {
+            blockIds: ['rootPage', 'row1']
+          }
+        }
+      }
+    }
+
+    const optimized = optimizeRecordMapForClientRender(recordMap, 'rootPage')
+
+    expect(optimized.block.rootPage.value.content).toEqual([
+      'root-text',
+      'collectionBlock'
+    ])
+    expect(optimized.block['root-text']).toBeDefined()
+    expect(optimized.block.row1.value.content).toBeUndefined()
+    expect(optimized.block['row1-text']).toBeUndefined()
   })
 })
