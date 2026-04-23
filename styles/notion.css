@@ -1854,6 +1854,36 @@ code[class*='language-'] {
   line-height: 1.65;
 }
 
+.notion-property-inline-row {
+  display: inline-flex;
+  width: 100%;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35em;
+  line-height: 1.5;
+  margin: 0.25em 0;
+}
+
+.notion-property-inline-row .notion-property-inline-name {
+  flex: 0 0 auto;
+  color: var(--fg-color-2);
+  font-size: inherit;
+  font-weight: 300;
+  letter-spacing: normal;
+  line-height: inherit;
+}
+
+.notion-property-inline-row .notion-property-inline-content {
+  min-width: 0;
+  font-weight: 700;
+  line-height: inherit;
+}
+
+.notion-property-inline-row .notion-property-map-link {
+  font-weight: 700;
+  line-height: inherit;
+}
+
 .notion-property-map-link {
   display: inline-flex;
   width: fit-content;

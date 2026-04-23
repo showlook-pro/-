@@ -8,8 +8,29 @@ import { Property as DefaultProperty } from 'react-notion-x/build/third-party/co
 const getBlockTitle = block =>
   String(block?.properties?.title?.[0]?.[0] || '').trim()
 
+const INLINE_PROMINENT_PROPERTY_NAMES = new Set([
+  '合作方式与意向',
+  '您的地址',
+  '您的电话号码'
+])
+
+const normalizePropertyName = name => String(name || '').trim()
+
+const isProminentInlineProperty = schema =>
+  INLINE_PROMINENT_PROPERTY_NAMES.has(normalizePropertyName(schema?.name))
+
+const formatInlineLabel = schema => {
+  const label = normalizePropertyName(schema?.name).replace(/[：:]+$/, '')
+  return label ? `${label}：` : ''
+}
+
 export default function NotionProperty(props) {
   const { block, inline, pagePropertiesMode, schema, data } = props
+  const prominentInlineProperty =
+    pagePropertiesMode &&
+    inline &&
+    schema?.type !== 'title' &&
+    isProminentInlineProperty(schema)
 
   if (isShowPagePropertiesField(schema)) {
     return null
@@ -50,6 +71,17 @@ export default function NotionProperty(props) {
     )
 
     if (inline) {
+      if (prominentInlineProperty) {
+        return (
+          <span className='notion-property notion-property-inline-value notion-property-inline-row notion-property-place'>
+            <span className='notion-property-inline-name'>
+              {formatInlineLabel(schema)}
+            </span>
+            <span className='notion-property-inline-content'>{mapLink}</span>
+          </span>
+        )
+      }
+
       return (
         <span className='notion-property notion-property-inline-value notion-property-place'>
           <span className='notion-property-inline-name'>{schema?.name}</span>
@@ -62,6 +94,19 @@ export default function NotionProperty(props) {
   }
 
   if (pagePropertiesMode && inline && schema?.type !== 'title') {
+    if (prominentInlineProperty) {
+      return (
+        <span className='notion-property notion-property-inline-value notion-property-inline-row'>
+          <span className='notion-property-inline-name'>
+            {formatInlineLabel(schema)}
+          </span>
+          <span className='notion-property-inline-content'>
+            <DefaultProperty {...props} />
+          </span>
+        </span>
+      )
+    }
+
     return (
       <span className='notion-property notion-property-inline-value'>
         <span className='notion-property-inline-name'>{schema?.name}</span>
