@@ -17,6 +17,8 @@ const BLOG = {
   AUTHOR: process.env.NEXT_PUBLIC_AUTHOR || 'SHOWLOOK FANS', // 您的昵称 例如 tangly1024
   BIO: process.env.NEXT_PUBLIC_BIO || 'SHOWLOOK FANS', // 作者简介
   LINK: process.env.NEXT_PUBLIC_LINK || 'https://xiaolu.love', // 网站地址
+  SEO_CANONICAL_LINK:
+    process.env.NEXT_PUBLIC_SEO_CANONICAL_LINK || 'https://www.xiaolu.love', // SEO标准域名，用于canonical和sitemap
   KEYWORDS: process.env.NEXT_PUBLIC_KEYWORD || 'SHOWLOOK, 小鹿, 抗衰, 热玛吉, 皮肤抗衰, 除皱, 美白, 紧致, 射频抗衰', // 网站关键词 英文逗号隔开
   BLOG_FAVICON: process.env.NEXT_PUBLIC_FAVICON || '/favicon.ico', // blog favicon 配置, 默认使用 /public/favicon.ico，支持在线图片，如 https://img.imesong.com/favicon.png
   BEI_AN: process.env.NEXT_PUBLIC_BEI_AN || '', // 备案号 闽ICP备XXXXXX

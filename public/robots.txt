@@ -47,3 +47,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://www.xiaolu.love/sitemap.xml
+Sitemap: https://www.xiaolu.love/rss/feed.xml

@@ -71,7 +71,7 @@ export async function getStaticProps({
 
   // 处理非列表内文章的内信息
   if (!props?.post) {
-    const pageId = fullSlug.slice(-1)[0]
+    const pageId = suffix?.[suffix.length - 1] || ''
     if (pageId.length >= 32) {
       const post = await getPost(pageId, props?.allPages)
       props.post = post

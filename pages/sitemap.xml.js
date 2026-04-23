@@ -2,6 +2,7 @@
 import BLOG from '@/blog.config'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData } from '@/lib/db/getSiteData'
+import { buildCanonicalUrl, normalizeSiteUrl, toDateOnly } from '@/lib/seo'
 import { extractLangId, extractLangPrefix } from '@/lib/utils/pageId'
 import { getServerSideSitemap } from 'next-sitemap'
 
@@ -19,15 +20,19 @@ export const getServerSideProps = async ctx => {
       from: 'sitemap.xml'
     })
     const link = siteConfig(
-      'LINK',
-      siteData?.siteInfo?.link,
+      'SEO_CANONICAL_LINK',
+      siteConfig('LINK', siteData?.siteInfo?.link, siteData.NOTION_CONFIG),
       siteData.NOTION_CONFIG
     )
-    const localeFields = generateLocalesSitemap(link, siteData.allPages, locale)
+    const localeFields = generateLocalesSitemap(link, siteData.allPages, locale, {
+      categoryOptions: siteData.categoryOptions,
+      tagOptions: siteData.tagOptions,
+      notionConfig: siteData.NOTION_CONFIG
+    })
     fields = fields.concat(localeFields)
   }
 
-  fields = getUniqueFields(fields);
+  fields = getUniqueFields(fields)
 
   // 缓存
   ctx.res.setHeader(
@@ -37,84 +42,165 @@ export const getServerSideProps = async ctx => {
   return getServerSideSitemap(ctx, fields)
 }
 
-function generateLocalesSitemap(link, allPages, locale) {
-  // 确保链接不以斜杠结尾
-  if (link && link.endsWith('/')) {
-    link = link.slice(0, -1)
-  }
-
-  if (locale && locale.length > 0 && locale.indexOf('/') !== 0) {
-    locale = '/' + locale
-  }
+export function generateLocalesSitemap(link, allPages, locale, options = {}) {
+  const siteUrl = normalizeSiteUrl(link)
+  const localePath = normalizeLocalePath(locale)
   const dateNow = new Date().toISOString().split('T')[0]
   const defaultFields = [
     {
-      loc: `${link}${locale}`,
+      loc: buildLocalizedUrl(siteUrl, localePath),
       lastmod: dateNow,
       changefreq: 'daily',
+      priority: '1.0'
+    },
+    {
+      loc: buildLocalizedUrl(siteUrl, localePath, 'archive'),
+      lastmod: dateNow,
+      changefreq: 'weekly',
+      priority: '0.8'
+    },
+    {
+      loc: buildLocalizedUrl(siteUrl, localePath, 'category'),
+      lastmod: dateNow,
+      changefreq: 'weekly',
       priority: '0.7'
     },
     {
-      loc: `${link}${locale}/archive`,
+      loc: buildLocalizedUrl(siteUrl, localePath, 'tag'),
       lastmod: dateNow,
-      changefreq: 'daily',
-      priority: '0.7'
-    },
-    {
-      loc: `${link}${locale}/category`,
-      lastmod: dateNow,
-      changefreq: 'daily',
-      priority: '0.7'
-    },
-    {
-      loc: `${link}${locale}/rss/feed.xml`,
-      lastmod: dateNow,
-      changefreq: 'daily',
-      priority: '0.7'
-    },
-    {
-      loc: `${link}${locale}/search`,
-      lastmod: dateNow,
-      changefreq: 'daily',
-      priority: '0.7'
-    },
-    {
-      loc: `${link}${locale}/tag`,
-      lastmod: dateNow,
-      changefreq: 'daily',
+      changefreq: 'weekly',
       priority: '0.7'
     }
   ]
+
+  const publishedPosts =
+    allPages?.filter(post => isSitemapPage(post) && post.type === 'Post') ?? []
+
+  const postsPerPage = Math.max(
+    Number(
+      siteConfig(
+        'POSTS_PER_PAGE',
+        BLOG.POSTS_PER_PAGE,
+        options.notionConfig
+      )
+    ) || 12,
+    1
+  )
+  const paginatedFields = Array.from(
+    {
+      length: Math.max(Math.ceil(publishedPosts.length / postsPerPage) - 1, 0)
+    },
+    (_, index) => ({
+      loc: buildLocalizedUrl(siteUrl, localePath, `page/${index + 2}`),
+      lastmod: dateNow,
+      changefreq: 'weekly',
+      priority: '0.6'
+    })
+  )
+
+  const categoryFields = buildTaxonomyFields({
+    siteUrl,
+    localePath,
+    taxonomyPath: 'category',
+    options: options.categoryOptions,
+    dateNow
+  })
+
+  const tagFields = buildTaxonomyFields({
+    siteUrl,
+    localePath,
+    taxonomyPath: 'tag',
+    options: options.tagOptions,
+    dateNow
+  })
+
   const postFields =
     allPages
-      ?.filter(p => p.status === BLOG.NOTION_PROPERTY_NAME.status_publish)
+      ?.filter(isSitemapPage)
       ?.map(post => {
-        const slugWithoutLeadingSlash = post?.slug.startsWith('/')
-          ? post?.slug?.slice(1)
-          : post.slug
+        const slugWithoutLeadingSlash = normalizeSitemapPath(post.slug)
         return {
-          loc: `${link}${locale}/${slugWithoutLeadingSlash}`,
-          lastmod: new Date(post?.publishDay).toISOString().split('T')[0],
-          changefreq: 'daily',
-          priority: '0.7'
+          loc: buildLocalizedUrl(siteUrl, localePath, slugWithoutLeadingSlash),
+          lastmod: toDateOnly(
+            post?.lastEditedDay,
+            post?.lastEditedDate,
+            post?.publishDay,
+            post?.date?.start_date
+          ),
+          changefreq: post.type === 'Post' ? 'weekly' : 'monthly',
+          priority: post.type === 'Post' ? '0.8' : '0.7'
         }
       }) ?? []
 
-  return defaultFields.concat(postFields)
+  return defaultFields.concat(
+    paginatedFields,
+    categoryFields,
+    tagFields,
+    postFields
+  )
 }
 
 function getUniqueFields(fields) {
-  const uniqueFieldsMap = new Map();
+  const uniqueFieldsMap = new Map()
 
   fields.forEach(field => {
-    const existingField = uniqueFieldsMap.get(field.loc);
+    const existingField = uniqueFieldsMap.get(field.loc)
 
     if (!existingField || new Date(field.lastmod) > new Date(existingField.lastmod)) {
-      uniqueFieldsMap.set(field.loc, field);
+      uniqueFieldsMap.set(field.loc, field)
     }
-  });
+  })
 
-  return Array.from(uniqueFieldsMap.values());
+  return Array.from(uniqueFieldsMap.values())
 }
 
-export default () => {}
+function normalizeLocalePath(locale) {
+  return String(locale || '').replace(/^\/+|\/+$/g, '')
+}
+
+function normalizeSitemapPath(path) {
+  return String(path || '').replace(/^\/+|\/+$/g, '')
+}
+
+function buildLocalizedUrl(siteUrl, localePath, path = '') {
+  const normalizedPath = [localePath, normalizeSitemapPath(path)]
+    .filter(Boolean)
+    .join('/')
+
+  return buildCanonicalUrl(siteUrl, normalizedPath)
+}
+
+function isSitemapPage(post) {
+  const slug = normalizeSitemapPath(post?.slug)
+
+  return (
+    post?.status === BLOG.NOTION_PROPERTY_NAME.status_publish &&
+    slug &&
+    !/^https?:\/\//i.test(slug)
+  )
+}
+
+function buildTaxonomyFields({
+  siteUrl,
+  localePath,
+  taxonomyPath,
+  options = [],
+  dateNow
+}) {
+  return options
+    .filter(option => option?.name)
+    .map(option => ({
+      loc: buildLocalizedUrl(
+        siteUrl,
+        localePath,
+        `${taxonomyPath}/${encodeURIComponent(option.name)}`
+      ),
+      lastmod: dateNow,
+      changefreq: 'weekly',
+      priority: '0.6'
+    }))
+}
+
+const SitemapXmlPage = () => {}
+
+export default SitemapXmlPage

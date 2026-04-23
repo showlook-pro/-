@@ -1,5 +1,10 @@
 import { siteConfig } from '@/lib/config'
 import { useGlobal } from '@/lib/global'
+import {
+  buildCanonicalUrl,
+  normalizeSiteUrl,
+  toAbsoluteUrl
+} from '@/lib/seo'
 import { loadExternalResource } from '@/lib/utils'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -12,11 +17,13 @@ import { useEffect } from 'react'
  */
 const SEO = props => {
   const { children, siteInfo, post, NOTION_CONFIG } = props
-  const PATH = siteConfig('PATH')
-  const LINK = siteConfig('LINK')
-  const SUB_PATH = siteConfig('SUB_PATH', '')
-  let url = PATH?.length ? `${LINK}/${SUB_PATH}` : LINK
-  let image
+  const LINK = normalizeSiteUrl(
+    siteConfig(
+      'SEO_CANONICAL_LINK',
+      siteConfig('LINK', siteInfo?.link, NOTION_CONFIG),
+      NOTION_CONFIG
+    )
+  )
   const router = useRouter()
   const meta = getSEOMeta(props, router, useGlobal()?.locale)
   const webFontUrl = siteConfig('FONT_URL')
@@ -38,7 +45,7 @@ const SEO = props => {
         })
       }
     })
-  }, [])
+  }, [webFontUrl])
 
   // SEO关键词
   const KEYWORDS = siteConfig('KEYWORDS')
@@ -46,14 +53,21 @@ const SEO = props => {
   if (post?.tags && post?.tags?.length > 0) {
     keywords = post?.tags?.join(',')
   }
-  if (meta) {
-    url = `${url}/${meta.slug}`
-    image = meta.image || '/bg_image.jpg'
-  }
+  const url = buildCanonicalUrl(LINK, meta?.slug)
+  const image = toAbsoluteUrl(meta?.image || '/bg_image.jpg', LINK)
   const TITLE = siteConfig('TITLE')
   const title = meta?.title || TITLE
   const description = meta?.description || `${siteInfo?.description}`
   const type = meta?.type || 'website'
+  const isArticle = meta?.contentType === 'Post' || type === 'article'
+  const isIndexable =
+    !router?.isFallback &&
+    !props?.isNotFoundPage &&
+    props?.statusCode !== 404 &&
+    !meta?.noindex
+  const robotsContent = isIndexable
+    ? 'index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1'
+    : 'noindex,follow'
   const lang = siteConfig('LANG').replace('-', '_') // Facebook OpenGraph 要 zh_CN 這樣的格式才抓得到語言
   const category = meta?.category || KEYWORDS // section 主要是像是 category 這樣的分類，Facebook 用這個來抓連結的分類
   const favicon = siteConfig('BLOG_FAVICON')
@@ -104,12 +118,15 @@ const SEO = props => {
       <link rel='apple-touch-icon' sizes='180x180' href='/apple-touch-icon.png' />
       <link rel='manifest' href='/site.webmanifest' />
       <title>{title}</title>
+      <link rel='canonical' href={url} key='canonical' />
+      <link rel='alternate' hrefLang={siteConfig('LANG')} href={url} />
+      <link rel='alternate' hrefLang='x-default' href={url} />
       <meta name='theme-color' content={BACKGROUND_DARK} />
       <meta
         name='viewport'
         content='width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0'
       />
-      <meta name='robots' content='follow, index, max-snippet:-1, max-image-preview:large, max-video-preview:-1' />
+      <meta name='robots' content={robotsContent} />
       <meta charSet='UTF-8' />
       <meta name='format-detection' content='telephone=no' />
       <meta name='mobile-web-app-capable' content='yes' />
@@ -184,7 +201,7 @@ const SEO = props => {
         <meta name='referrer' content='no-referrer-when-downgrade' />
       )}
       {/* 文章特定元数据 */}
-      {meta?.type === 'Post' && (
+      {isArticle && (
         <>
           <meta property='article:published_time' content={meta.publishDay} />
           <meta property='article:modified_time' content={meta.lastEditedDay} />
@@ -199,7 +216,9 @@ const SEO = props => {
       <script
         type='application/ld+json'
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(generateStructuredData(meta, siteInfo, url, image, AUTHOR))
+          __html: JSON.stringify(
+            generateStructuredData(meta, siteInfo, url, image, AUTHOR, LINK)
+          )
         }}
       />
 
@@ -226,13 +245,13 @@ const SEO = props => {
  * @param {*} author
  * @returns
  */
-const generateStructuredData = (meta, siteInfo, url, image, author) => {
+const generateStructuredData = (meta, siteInfo, url, image, author, siteUrl) => {
   const baseData = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: siteInfo?.title,
     description: siteInfo?.description,
-    url: siteConfig('LINK'),
+    url: siteUrl,
     author: {
       '@type': 'Person',
       name: author
@@ -242,13 +261,18 @@ const generateStructuredData = (meta, siteInfo, url, image, author) => {
       name: siteInfo?.title,
       logo: {
         '@type': 'ImageObject',
-        url: siteInfo?.icon
+        url: toAbsoluteUrl(siteInfo?.icon, siteUrl)
       }
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteUrl}/search?s={search_term_string}`,
+      'query-input': 'required name=search_term_string'
     }
   }
 
   // 如果是文章页面，添加文章结构化数据
-  if (meta?.type === 'Post') {
+  if (meta?.contentType === 'Post' || meta?.type === 'article') {
     return {
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
@@ -267,7 +291,7 @@ const generateStructuredData = (meta, siteInfo, url, image, author) => {
         name: siteInfo?.title,
         logo: {
           '@type': 'ImageObject',
-          url: siteInfo?.icon
+          url: toAbsoluteUrl(siteInfo?.icon, siteUrl)
         }
       },
       mainEntityOfPage: {
@@ -361,7 +385,8 @@ const getSEOMeta = (props, router, locale) => {
         description: siteDescription,
         image: siteImage,
         slug: 'search',
-        type: 'website'
+        type: 'website',
+        noindex: true
       }
     case '/search/[keyword]':
     case '/search/[keyword]/page/[page]':
@@ -370,7 +395,8 @@ const getSEOMeta = (props, router, locale) => {
         description: TITLE || siteDescription,
         image: siteImage,
         slug: 'search/' + (keyword || ''),
-        type: 'website'
+        type: 'website',
+        noindex: true
       }
     case '/404':
       return {
@@ -400,11 +426,14 @@ const getSEOMeta = (props, router, locale) => {
           ? `${post?.title} | ${siteTitle}`
           : `${siteTitle} | loading`,
         description: post?.summary || siteDescription,
-        type: post?.type,
+        type: post?.type === 'Post' ? 'article' : 'website',
+        contentType: post?.type,
         slug: post?.slug,
         image: post?.pageCoverThumbnail || siteImage,
         category: post?.category?.[0],
-        tags: post?.tags
+        tags: post?.tags,
+        publishDay: post?.publishDay,
+        lastEditedDay: post?.lastEditedDay || post?.publishDay
       }
   }
 }
