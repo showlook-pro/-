@@ -1,6 +1,16 @@
 /**
  * 开发人员可能需要关注的配置
  */
+const lifecycleEvent = process.env.npm_lifecycle_event
+const isBuildLifecycle =
+  lifecycleEvent === 'build' || lifecycleEvent === 'export'
+const isProductionRuntime =
+  process.env.NODE_ENV === 'production' ||
+  process.env.VERCEL_ENV === 'production' ||
+  process.env.BUILD_MODE === 'true' ||
+  process.env.EXPORT === 'true'
+const hasExplicitCacheSetting = typeof process.env.ENABLE_CACHE !== 'undefined'
+
 module.exports = {
   SUB_PATH: '', // leave this empty unless you want to deploy in a folder
   DEBUG: process.env.NEXT_PUBLIC_DEBUG || false, // 是否显示调试按钮
@@ -11,15 +21,10 @@ module.exports = {
   // Redis 缓存数据库地址
   REDIS_URL: process.env.REDIS_URL || '',
 
-  ENABLE_CACHE:
-    process.env.ENABLE_CACHE ||
-    process.env.npm_lifecycle_event === 'build' ||
-    process.env.npm_lifecycle_event === 'export', // 在打包过程中默认开启缓存，开发或运行时开启此功能意义不大。
-  isProd:
-    process.env.NODE_ENV === 'production' ||
-    process.env.VERCEL_ENV === 'production' ||
-    process.env.BUILD_MODE === 'true' ||
-    process.env.EXPORT === 'true', // 生产构建不能只依赖 Vercel 环境变量，否则动态路由会退回到 fallback:true，产生软404。
+  ENABLE_CACHE: hasExplicitCacheSetting
+    ? process.env.ENABLE_CACHE
+    : isProductionRuntime || isBuildLifecycle, // 生产运行时默认开启缓存，避免每次刷新都直接回源 Notion。
+  isProd: isProductionRuntime, // 生产构建不能只依赖 Vercel 环境变量，否则动态路由会退回到 fallback:true，产生软404。
   BUNDLE_ANALYZER: process.env.ANALYZE === 'true' || false, // 是否展示编译依赖内容与大小
   VERSION: (() => {
     try {
