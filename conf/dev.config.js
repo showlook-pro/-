@@ -4,6 +4,7 @@
 const lifecycleEvent = process.env.npm_lifecycle_event
 const isBuildLifecycle =
   lifecycleEvent === 'build' || lifecycleEvent === 'export'
+const isDevelopmentRuntime = process.env.NODE_ENV === 'development'
 const isProductionRuntime =
   process.env.NODE_ENV === 'production' ||
   process.env.VERCEL_ENV === 'production' ||
@@ -23,7 +24,7 @@ module.exports = {
 
   ENABLE_CACHE: hasExplicitCacheSetting
     ? process.env.ENABLE_CACHE
-    : isProductionRuntime || isBuildLifecycle, // 生产运行时默认开启缓存，避免每次刷新都直接回源 Notion。
+    : isBuildLifecycle || isDevelopmentRuntime, // 与上游 NotionNext 保持一致：生产运行时默认依赖 ISR，不读本地缓存，避免延长 Notion 更新可见时间。
   isProd: isProductionRuntime, // 生产构建不能只依赖 Vercel 环境变量，否则动态路由会退回到 fallback:true，产生软404。
   BUNDLE_ANALYZER: process.env.ANALYZE === 'true' || false, // 是否展示编译依赖内容与大小
   VERSION: (() => {

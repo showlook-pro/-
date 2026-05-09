@@ -16,12 +16,20 @@ describe('conf/dev.config', () => {
     process.env = originalEnv
   })
 
-  it('enables cache by default in production runtime', () => {
+  it('keeps production runtime cache reads off by default so ISR controls freshness', () => {
     process.env.NODE_ENV = 'production'
 
     const config = require('../../conf/dev.config')
 
     expect(config.isProd).toBe(true)
+    expect(config.ENABLE_CACHE).toBe(false)
+  })
+
+  it('enables cache by default during build', () => {
+    process.env.npm_lifecycle_event = 'build'
+
+    const config = require('../../conf/dev.config')
+
     expect(config.ENABLE_CACHE).toBe(true)
   })
 
