@@ -39,7 +39,7 @@ describe('getAllPageIds', () => {
     expect(result).toEqual(['page-3', 'page-4'])
   })
 
-  test('deduplicates ids collected from multiple views', () => {
+  test('deduplicates ids collected from collection query views', () => {
     const result = getAllPageIds(
       {
         collectionA: {
@@ -64,7 +64,35 @@ describe('getAllPageIds', () => {
       ['missing-view']
     )
 
-    expect(result).toEqual(['page-1', 'page-2', 'page-3', 'page-4'])
+    expect(result).toEqual(['page-1', 'page-2', 'page-3'])
+  })
+
+  test('does not collect page_sort from unrelated views when view ids are known', () => {
+    const result = getAllPageIds(
+      {
+        collectionA: {
+          viewA: {
+            blockIds: ['page-1']
+          }
+        }
+      },
+      'collectionA',
+      {
+        viewA: {
+          value: {
+            page_sort: ['page-1', 'page-2']
+          }
+        },
+        nestedOtherView: {
+          value: {
+            page_sort: ['nested-page']
+          }
+        }
+      },
+      ['viewA']
+    )
+
+    expect(result).toEqual(['page-1', 'page-2'])
   })
 
   test('supports nested wrapped collection view records', () => {
