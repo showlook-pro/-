@@ -1,5 +1,5 @@
 import { getPost } from '@/lib/notion/getNotionPost'
-import { getPage } from '@/lib/notion/getPostBlocks'
+import { getContentPage } from '@/lib/notion/getPostBlocks'
 import notionAPI from '@/lib/notion/getNotionAPI'
 
 jest.mock('notion-utils', () => ({
@@ -23,7 +23,7 @@ jest.mock('react-notion-x', () => ({
 }))
 
 jest.mock('@/lib/notion/getPostBlocks', () => ({
-  getPage: jest.fn()
+  getContentPage: jest.fn()
 }))
 
 jest.mock('@/lib/notion/getNotionAPI', () => ({
@@ -43,7 +43,7 @@ describe('getPost', () => {
   })
 
   it('normalizes raw Notion records before reading direct UUID page properties', async () => {
-    getPage.mockResolvedValue({
+    getContentPage.mockResolvedValue({
       block: {
         [uuid]: {
           value: {
@@ -120,7 +120,7 @@ describe('getPost', () => {
   })
 
   it('does not throw when direct UUID page properties are unavailable', async () => {
-    getPage.mockResolvedValue({
+    getContentPage.mockResolvedValue({
       block: {
         [uuid]: {
           value: {

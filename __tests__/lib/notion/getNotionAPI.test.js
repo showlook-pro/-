@@ -95,6 +95,20 @@ describe('notionAPI hydration policy', () => {
     expect(mockGetCollectionData).toHaveBeenCalledTimes(1)
   })
 
+  it('does not retry Notion rate limit errors during collection hydration', async () => {
+    mockGetPage.mockResolvedValue(createRecordMap())
+    mockGetCollectionData.mockRejectedValue(
+      new Error('Too many requests. Try again in a moment.')
+    )
+
+    const notionAPI = require('@/lib/notion/getNotionAPI').default
+    await expect(
+      notionAPI.getPage('page1', { hydrateCollections: true })
+    ).rejects.toThrow('Too many requests')
+
+    expect(mockGetCollectionData).toHaveBeenCalledTimes(1)
+  })
+
   it('hydrates form blocks and layouts only when explicitly requested', async () => {
     mockGetPage.mockResolvedValue(createRecordMap())
     mockGetBlocks.mockResolvedValue({
