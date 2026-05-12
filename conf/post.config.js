@@ -25,6 +25,9 @@ module.exports = {
   POST_LIST_STYLE: process.env.NEXT_PUBLIC_POST_LIST_STYLE || 'page', // ['page','scroll] 文章列表样式:页码分页、单页滚动加载
   POST_LIST_PREVIEW: process.env.NEXT_PUBLIC_POST_PREVIEW || 'false', //  是否在列表加载文章预览
   POST_PREVIEW_LINES: process.env.NEXT_PUBLIC_POST_POST_PREVIEW_LINES || 12, // 预览博客行数
+  POST_PREVIEW_MAX_COUNT: process.env.NEXT_PUBLIC_POST_PREVIEW_MAX_COUNT || 4, // 首页列表最多补拉几篇正文预览，跟随 NotionNext 策略
+  POST_PREVIEW_CONCURRENCY:
+    process.env.NEXT_PUBLIC_POST_PREVIEW_CONCURRENCY || 5, // 首页正文预览补拉并发数，跟随 NotionNext 默认值
   POST_RECOMMEND_COUNT: process.env.NEXT_PUBLIC_POST_RECOMMEND_COUNT || 6, // 推荐文章数量
   POSTS_PER_PAGE: process.env.NEXT_PUBLIC_POST_PER_PAGE || 12, // post counts per page
   POSTS_SORT_BY: process.env.NEXT_PUBLIC_POST_SORT_BY || 'notion', // 排序方式 'date'按时间,'notion'由notion控制
