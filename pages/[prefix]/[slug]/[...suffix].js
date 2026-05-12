@@ -1,9 +1,11 @@
 import BLOG from '@/blog.config'
+import { getPriorityPages, prefetchAllBlockMaps } from '@/lib/build/prefetch'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData, getPost } from '@/lib/db/getSiteData'
 import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { createNotFoundStaticPropsResult } from '@/lib/router/staticProps'
 import { checkSlugHasMorThanTwoSlash, processPostData } from '@/lib/utils/post'
+import { isExport } from '@/lib/utils/buildMode'
 import { idToUuid } from 'notion-utils'
 import Slug from '..'
 
@@ -22,16 +24,27 @@ const PrefixSlug = props => {
  * @returns
  */
 export async function getStaticPaths() {
-  if (!BLOG.isProd) {
+  const from = 'slug-paths'
+  const { allPages } = await getGlobalData({ from })
+
+  if (isExport()) {
+    await prefetchAllBlockMaps(allPages)
     return {
-      paths: [],
-      fallback: true
+      paths: allPages
+        ?.filter(row => checkSlugHasMorThanTwoSlash(row))
+        .map(row => ({
+          params: {
+            prefix: row.slug.split('/')[0],
+            slug: row.slug.split('/')[1],
+            suffix: row.slug.split('/').slice(2)
+          }
+        })),
+      fallback: false
     }
   }
 
-  const from = 'slug-paths'
-  const { allPages } = await getGlobalData({ from })
-  const paths = allPages
+  const priorityPages = getPriorityPages(allPages)
+  const paths = priorityPages
     ?.filter(row => checkSlugHasMorThanTwoSlash(row))
     .map(row => ({
       params: {

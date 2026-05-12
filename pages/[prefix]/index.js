@@ -2,6 +2,7 @@ import BLOG from '@/blog.config'
 import useNotification from '@/components/Notification'
 import OpenWrite from '@/components/OpenWrite'
 import { siteConfig } from '@/lib/config'
+import { getPriorityPages, prefetchAllBlockMaps } from '@/lib/build/prefetch'
 import { getGlobalData, getPost } from '@/lib/db/getSiteData'
 import { useGlobal } from '@/lib/global'
 import { getPageTableOfContents } from '@/lib/notion/getPageTableOfContents'
@@ -12,6 +13,7 @@ import {
   saveScopePassword
 } from '@/lib/password'
 import { checkSlugHasNoSlash, processPostData } from '@/lib/utils/post'
+import { isExport } from '@/lib/utils/buildMode'
 import { DynamicLayout } from '@/themes/theme'
 import { createNotFoundStaticPropsResult } from '@/lib/router/staticProps'
 import md5 from 'js-md5'
@@ -112,18 +114,24 @@ const Slug = props => {
 }
 
 export async function getStaticPaths() {
-  if (!BLOG.isProd) {
+  const from = 'slug-paths'
+  const { allPages } = await getGlobalData({ from })
+
+  if (isExport()) {
+    await prefetchAllBlockMaps(allPages)
     return {
-      paths: [],
-      fallback: true
+      paths: allPages
+        ?.filter(row => checkSlugHasNoSlash(row))
+        .map(row => ({ params: { prefix: row.slug } })),
+      fallback: false
     }
   }
 
-  const from = 'slug-paths'
-  const { allPages } = await getGlobalData({ from })
-  const paths = allPages
+  const priorityPages = getPriorityPages(allPages)
+  const paths = priorityPages
     ?.filter(row => checkSlugHasNoSlash(row))
     .map(row => ({ params: { prefix: row.slug } }))
+
   return {
     paths: paths,
     fallback: 'blocking'

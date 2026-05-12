@@ -16,8 +16,9 @@ describe('conf/dev.config', () => {
     process.env = originalEnv
   })
 
-  it('keeps production runtime cache reads off by default so ISR controls freshness', () => {
+  it('keeps Vercel production runtime cache reads off by default so ISR controls freshness', () => {
     process.env.NODE_ENV = 'production'
+    process.env.VERCEL_ENV = 'production'
 
     const config = require('../../conf/dev.config')
 
@@ -31,6 +32,14 @@ describe('conf/dev.config', () => {
     const config = require('../../conf/dev.config')
 
     expect(config.ENABLE_CACHE).toBe(true)
+  })
+
+  it('does not treat local BUILD_MODE as production site mode', () => {
+    process.env.BUILD_MODE = 'true'
+
+    const config = require('../../conf/dev.config')
+
+    expect(config.isProd).toBeFalsy()
   })
 
   it('keeps an explicit cache override when provided', () => {

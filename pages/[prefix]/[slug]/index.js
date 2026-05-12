@@ -1,9 +1,11 @@
 import BLOG from '@/blog.config'
+import { getPriorityPages, prefetchAllBlockMaps } from '@/lib/build/prefetch'
 import { siteConfig } from '@/lib/config'
 import { getGlobalData, getPost } from '@/lib/db/getSiteData'
 import { optimizeStaticPageProps } from '@/lib/pageProps'
 import { createNotFoundStaticPropsResult } from '@/lib/router/staticProps'
 import { checkSlugHasOneSlash, processPostData } from '@/lib/utils/post'
+import { isExport } from '@/lib/utils/buildMode'
 import { idToUuid } from 'notion-utils'
 import Slug from '..'
 
@@ -18,19 +20,28 @@ const PrefixSlug = props => {
 }
 
 export async function getStaticPaths() {
-  if (!BLOG.isProd) {
-    return {
-      paths: [],
-      fallback: true
-    }
-  }
-
   const from = 'slug-paths'
   const { allPages } = await getGlobalData({ from })
 
+  if (isExport()) {
+    await prefetchAllBlockMaps(allPages)
+    return {
+      paths: allPages
+        ?.filter(row => checkSlugHasOneSlash(row))
+        .map(row => ({
+          params: {
+            prefix: row.slug.split('/')[0],
+            slug: row.slug.split('/')[1]
+          }
+        })),
+      fallback: false
+    }
+  }
+
   // 根据slug中的 / 分割成prefix和slug两个字段 ; 例如 article/test
   // 最终用户可以通过  [domain]/[prefix]/[slug] 路径访问，即这里的 [domain]/article/test
-  const paths = allPages
+  const priorityPages = getPriorityPages(allPages)
+  const paths = priorityPages
     ?.filter(row => checkSlugHasOneSlash(row))
     .map(row => ({
       params: { prefix: row.slug.split('/')[0], slug: row.slug.split('/')[1] }
