@@ -171,6 +171,63 @@ describe('normalizeRecordMap', () => {
     ).toEqual(['row1'])
   })
 
+  it('normalizes collection title visibility for all collection views', () => {
+    const recordMap = {
+      block: {
+        inlineCollection: {
+          value: {
+            id: 'inlineCollection',
+            type: 'collection_view',
+            format: {
+              hide_inline_collection_name: false
+            },
+            view_ids: ['galleryView']
+          }
+        },
+        fullPageCollection: {
+          value: {
+            id: 'fullPageCollection',
+            type: 'collection_view_page',
+            view_ids: ['tableView']
+          }
+        }
+      },
+      collection_view: {
+        galleryView: {
+          value: {
+            id: 'galleryView',
+            type: 'gallery',
+            format: {
+              hide_linked_collection_name: false
+            }
+          }
+        },
+        tableView: {
+          value: {
+            id: 'tableView',
+            type: 'table'
+          }
+        }
+      }
+    }
+
+    const normalized = normalizeRecordMap(recordMap)
+
+    expect(
+      normalized.block.inlineCollection.value.format.hide_inline_collection_name
+    ).toBe(true)
+    expect(
+      normalized.block.fullPageCollection.value.format.hide_inline_collection_name
+    ).toBe(true)
+    expect(
+      normalized.collection_view.galleryView.value.format
+        .hide_linked_collection_name
+    ).toBe(true)
+    expect(
+      normalized.collection_view.tableView.value.format.hide_linked_collection_name
+    ).toBe(true)
+  })
+
   it('preserves existing collection ids on collection view blocks', () => {
     const recordMap = {
       block: {
