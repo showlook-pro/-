@@ -1,14 +1,6 @@
 /**
  * 开发人员可能需要关注的配置
  */
-const lifecycleEvent = process.env.npm_lifecycle_event
-const isBuildLifecycle =
-  lifecycleEvent === 'build' || lifecycleEvent === 'export'
-const isDevelopmentRuntime = process.env.NODE_ENV === 'development'
-const isProductionRuntime =
-  process.env.VERCEL_ENV === 'production' || process.env.EXPORT
-const hasExplicitCacheSetting = typeof process.env.ENABLE_CACHE !== 'undefined'
-
 module.exports = {
   SUB_PATH: '', // leave this empty unless you want to deploy in a folder
   DEBUG: process.env.NEXT_PUBLIC_DEBUG || false, // 是否显示调试按钮
@@ -19,10 +11,13 @@ module.exports = {
   // Redis 缓存数据库地址
   REDIS_URL: process.env.REDIS_URL || '',
 
-  ENABLE_CACHE: hasExplicitCacheSetting
-    ? process.env.ENABLE_CACHE
-    : isBuildLifecycle || isDevelopmentRuntime, // 与上游 NotionNext 保持一致：生产运行时默认依赖 ISR，不读本地缓存，避免延长 Notion 更新可见时间。
-  isProd: isProductionRuntime, // 与上游 NotionNext 保持一致：Vercel Production / Export 才走生产路径。
+  // 与上游 NotionNext 保持一致：生产运行时默认依赖 ISR，build/export/dev 才默认读项目缓存。
+  ENABLE_CACHE:
+    process.env.ENABLE_CACHE ||
+    process.env.npm_lifecycle_event === 'build' ||
+    process.env.npm_lifecycle_event === 'export' ||
+    process.env.NODE_ENV === 'development',
+  isProd: process.env.VERCEL_ENV === 'production' || process.env.EXPORT, // distinguish between development and production environment (ref: https://vercel.com/docs/environment-variables#system-environment-variables)
   BUNDLE_ANALYZER: process.env.ANALYZE === 'true' || false, // 是否展示编译依赖内容与大小
   VERSION: (() => {
     try {

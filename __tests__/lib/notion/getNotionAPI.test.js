@@ -57,7 +57,7 @@ const createRecordMap = () => ({
   }
 })
 
-describe('notionAPI hydration policy', () => {
+describe('notionAPI upstream request policy', () => {
   beforeEach(() => {
     jest.resetModules()
     mockGetPage.mockReset()
@@ -78,72 +78,36 @@ describe('notionAPI hydration policy', () => {
     expect(mockSyncRecordValues).not.toHaveBeenCalled()
   })
 
-  it('hydrates nested collections only when explicitly requested', async () => {
+  it('ignores custom hydration options instead of calling getCollectionData', async () => {
     mockGetPage.mockResolvedValue(createRecordMap())
-    mockGetCollectionData.mockResolvedValue({
-      recordMap: {},
-      result: {
-        reducerResults: {
-          blockIds: []
-        }
-      }
-    })
 
     const notionAPI = require('@/lib/notion/getNotionAPI').default
     await notionAPI.getPage('page1', { hydrateCollections: true })
 
-    expect(mockGetCollectionData).toHaveBeenCalledTimes(1)
+    expect(mockGetPage).toHaveBeenCalledTimes(1)
+    expect(mockGetCollectionData).not.toHaveBeenCalled()
   })
 
-  it('does not retry Notion rate limit errors during collection hydration', async () => {
+  it('does not surface collection hydration rate limits because hydration is not part of browsing', async () => {
     mockGetPage.mockResolvedValue(createRecordMap())
     mockGetCollectionData.mockRejectedValue(
       new Error('Too many requests. Try again in a moment.')
     )
 
     const notionAPI = require('@/lib/notion/getNotionAPI').default
-    await expect(
-      notionAPI.getPage('page1', { hydrateCollections: true })
-    ).rejects.toThrow('Too many requests')
+    await notionAPI.getPage('page1', { hydrateCollections: true })
 
-    expect(mockGetCollectionData).toHaveBeenCalledTimes(1)
+    expect(mockGetCollectionData).not.toHaveBeenCalled()
   })
 
-  it('hydrates form blocks and layouts only when explicitly requested', async () => {
+  it('ignores form hydration options instead of calling getBlocks or syncRecordValues', async () => {
     mockGetPage.mockResolvedValue(createRecordMap())
-    mockGetBlocks.mockResolvedValue({
-      recordMap: {
-        block: {
-          formBlock1: {
-            value: {
-              id: 'formBlock1',
-              type: 'form',
-              format: {
-                form_layout_pointer: {
-                  id: 'layout1'
-                }
-              }
-            }
-          }
-        }
-      }
-    })
-    mockSyncRecordValues.mockResolvedValue({
-      recordMap: {
-        layout: {
-          layout1: {
-            value: {
-              id: 'layout1'
-            }
-          }
-        }
-      }
-    })
 
     const notionAPI = require('@/lib/notion/getNotionAPI').default
     await notionAPI.getPage('page1', { hydrateForms: true })
 
-    expect(mockGetBlocks).toHaveBeenCalledTimes(1)
-    expect(mockSyncRecordValues).toHaveBeenCalledTimes(1)
+    expect(mockGetPage).toHaveBeenCalledTimes(1)
+    expect(mockGetBlocks).not.toHaveBeenCalled()
+    expect(mockSyncRecordValues).not.toHaveBeenCalled()
   })
 })

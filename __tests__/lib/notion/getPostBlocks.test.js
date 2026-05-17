@@ -65,20 +65,17 @@ describe('getMissingContentHydrationOptions', () => {
     ).toBeNull()
   })
 
-  it('hydrates collection data only when collection query is missing', () => {
+  it('does not request collection hydration when collection query is missing', () => {
     expect(
       getMissingContentHydrationOptions(
         createCollectionRecordMap({
           collection_query: {}
         })
       )
-    ).toEqual({
-      hydrateCollections: true,
-      hydrateForms: false
-    })
+    ).toBeNull()
   })
 
-  it('hydrates form blocks only when a native form block is missing', () => {
+  it('does not request form hydration when a native form block is missing', () => {
     expect(
       getMissingContentHydrationOptions(
         createCollectionRecordMap({
@@ -108,9 +105,6 @@ describe('getMissingContentHydrationOptions', () => {
           collection_query: {}
         })
       )
-    ).toEqual({
-      hydrateCollections: false,
-      hydrateForms: true
-    })
+    ).toBeNull()
   })
 })
