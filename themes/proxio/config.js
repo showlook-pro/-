@@ -189,7 +189,7 @@ const CONFIG = {
   PROXIO_ABOUT_KEY_4: '恢复期',
   PROXIO_ABOUT_VAL_4: '0天',
 
-  PROXIO_ABOUT_BUTTON_URL: '/about',
+  PROXIO_ABOUT_BUTTON_URL: '/article/FP01',
   PROXIO_ABOUT_BUTTON_TEXT: '详细了解 Showlook肤动能',
 
   // 横向滚动文字
