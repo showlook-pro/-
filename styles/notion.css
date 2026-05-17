@@ -2531,3 +2531,14 @@ figure.notion-asset-wrapper.notion-asset-wrapper-video > div {
 .notion-gallery {
   padding: 0 16px;
 }
+
+#notion-article .notion-collection-title-hidden .notion-gallery-grid,
+#notion-article .notion-collection-title-hidden .notion-list-body {
+  border-top: 0;
+  padding-top: 0;
+}
+
+#notion-article .notion-collection-title-hidden .notion-table-header-inner,
+#notion-article .notion-collection-title-hidden .notion-board-header-inner {
+  border-top: 0;
+}

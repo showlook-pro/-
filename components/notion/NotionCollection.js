@@ -220,6 +220,11 @@ const withConditionalNonNavigatingLink = (LinkComponent, shouldDisable) => {
   }
 }
 
+const COLLECTION_TITLE_HIDDEN_CLASS = 'notion-collection-title-hidden'
+
+const getCollectionClassName = className =>
+  [className, COLLECTION_TITLE_HIDDEN_CLASS].filter(Boolean).join(' ')
+
 const buildCollectionContext = ({
   ctx,
   notionContext,
@@ -287,7 +292,13 @@ export default function NotionCollection({
   }, [block?.id, defaultViewId])
 
   if (!hasFormView) {
-    return <DefaultCollection block={block} className={className} ctx={collectionCtx} />
+    return (
+      <DefaultCollection
+        block={block}
+        className={getCollectionClassName(className)}
+        ctx={collectionCtx}
+      />
+    )
   }
 
   const activeView =
@@ -329,7 +340,7 @@ export default function NotionCollection({
       ) : (
         <DefaultCollection
           block={activeBlock}
-          className={className}
+          className={getCollectionClassName(className)}
           ctx={collectionCtx}
         />
       )}
