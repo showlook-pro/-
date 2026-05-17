@@ -258,6 +258,187 @@ describe('normalizeRecordMap', () => {
     ).toEqual(['newestRow', 'olderRow'])
   })
 
+  it('applies Notion view property filters to collection query rows', () => {
+    const recordMap = {
+      block: {
+        galleryBlock: {
+          value: {
+            id: 'galleryBlock',
+            type: 'collection_view',
+            parent_id: 'page1',
+            view_ids: ['galleryView']
+          }
+        },
+        caseRow: {
+          value: {
+            id: 'caseRow',
+            type: 'page',
+            parent_id: 'collection1',
+            parent_table: 'collection',
+            properties: {
+              category: [['案例']]
+            }
+          }
+        },
+        materialRow: {
+          value: {
+            id: 'materialRow',
+            type: 'page',
+            parent_id: 'collection1',
+            parent_table: 'collection',
+            properties: {
+              category: [['主栏目']]
+            }
+          }
+        }
+      },
+      collection: {
+        collection1: {
+          value: {
+            id: 'collection1',
+            schema: {
+              category: {
+                name: '栏目',
+                type: 'select'
+              }
+            }
+          }
+        }
+      },
+      collection_view: {
+        galleryView: {
+          value: {
+            id: 'galleryView',
+            type: 'gallery',
+            format: {
+              collection_pointer: {
+                id: 'collection1'
+              },
+              property_filters: [
+                {
+                  filter: {
+                    property: 'category',
+                    filter: {
+                      operator: 'enum_is',
+                      value: {
+                        type: 'exact',
+                        value: '案例'
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      collection_query: {
+        collection1: {
+          galleryView: {
+            collection_group_results: {
+              type: 'results',
+              blockIds: ['caseRow', 'materialRow'],
+              hasMore: false
+            }
+          }
+        }
+      }
+    }
+
+    const normalized = normalizeRecordMap(recordMap)
+
+    expect(
+      normalized.collection_query.collection1.galleryView.collection_group_results
+        .blockIds
+    ).toEqual(['caseRow'])
+  })
+
+  it('applies Notion view property filters to fallback collection rows', () => {
+    const recordMap = {
+      block: {
+        galleryBlock: {
+          value: {
+            id: 'galleryBlock',
+            type: 'collection_view',
+            parent_id: 'page1',
+            view_ids: ['galleryView']
+          }
+        },
+        caseRow: {
+          value: {
+            id: 'caseRow',
+            type: 'page',
+            parent_id: 'collection1',
+            parent_table: 'collection',
+            created_time: 20,
+            properties: {
+              category: [['案例']]
+            }
+          }
+        },
+        materialRow: {
+          value: {
+            id: 'materialRow',
+            type: 'page',
+            parent_id: 'collection1',
+            parent_table: 'collection',
+            created_time: 10,
+            properties: {
+              category: [['主栏目']]
+            }
+          }
+        }
+      },
+      collection: {
+        collection1: {
+          value: {
+            id: 'collection1',
+            schema: {
+              category: {
+                name: '栏目',
+                type: 'select'
+              }
+            }
+          }
+        }
+      },
+      collection_view: {
+        galleryView: {
+          value: {
+            id: 'galleryView',
+            type: 'gallery',
+            format: {
+              collection_pointer: {
+                id: 'collection1'
+              },
+              property_filters: [
+                {
+                  filter: {
+                    property: 'category',
+                    filter: {
+                      operator: 'enum_is',
+                      value: {
+                        type: 'exact',
+                        value: '案例'
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+
+    const normalized = normalizeRecordMap(recordMap)
+
+    expect(
+      normalized.collection_query.collection1.galleryView.collection_group_results
+        .blockIds
+    ).toEqual(['caseRow'])
+  })
+
   it('returns the original object when there is nothing to normalize', () => {
     const recordMap = {
       block: {
