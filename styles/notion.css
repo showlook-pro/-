@@ -2542,3 +2542,91 @@ figure.notion-asset-wrapper.notion-asset-wrapper-video > div {
 #notion-article .notion-collection-title-hidden .notion-board-header-inner {
   border-top: 0;
 }
+
+/* Notion toggle rhythm
+ * Toggle blocks are content containers, not inline text. Keep the summary,
+ * opened body, and nested content on separate vertical rhythms so large
+ * toggle-heavy articles do not collapse into a dense wall of text.
+ */
+#notion-article .notion-toggle {
+  width: 100%;
+  margin: 1.15rem 0 !important;
+  padding: 0 !important;
+  line-height: 1.75;
+}
+
+#notion-article .notion-toggle + .notion-toggle {
+  margin-top: 0.9rem !important;
+}
+
+#notion-article .notion-toggle > summary {
+  display: block;
+  padding: 0.48rem 0.125rem !important;
+  cursor: pointer;
+  outline: none;
+  line-height: 1.68 !important;
+}
+
+#notion-article .notion-toggle > summary .notion-h,
+#notion-article .notion-toggle > summary .notion-text {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.68 !important;
+}
+
+#notion-article .notion-toggle[open] > summary {
+  margin-bottom: 0.55rem !important;
+}
+
+#notion-article .notion-toggle > div {
+  margin-left: 1.15em;
+  padding: 0.12rem 0 0.1rem 0.25rem;
+}
+
+#notion-article .notion-toggle > div > .notion-text,
+#notion-article .notion-toggle > div > .notion-list,
+#notion-article .notion-toggle > div > .notion-callout {
+  margin-top: 0.45rem !important;
+  margin-bottom: 0.9rem !important;
+}
+
+#notion-article .notion-toggle > div > .notion-h {
+  margin-top: 1.05rem !important;
+  margin-bottom: 0.55rem !important;
+  line-height: 1.45 !important;
+}
+
+#notion-article .notion-toggle .notion-toggle {
+  margin-top: 0.85rem !important;
+  margin-bottom: 0.85rem !important;
+}
+
+#notion-article .notion-callout-text .notion-text {
+  margin: 0.35rem 0 !important;
+  line-height: 1.7 !important;
+}
+
+@media (max-width: 767px) {
+  #notion-article .notion-toggle {
+    margin: 1rem 0 !important;
+  }
+
+  #notion-article .notion-toggle > summary {
+    padding: 0.55rem 0.125rem !important;
+    line-height: 1.72 !important;
+  }
+
+  #notion-article .notion-toggle > summary .notion-h,
+  #notion-article .notion-toggle > summary .notion-text {
+    line-height: 1.72 !important;
+  }
+
+  #notion-article .notion-toggle[open] > summary {
+    margin-bottom: 0.6rem !important;
+  }
+
+  #notion-article .notion-toggle > div {
+    margin-left: 1em;
+    padding-left: 0.2rem;
+  }
+}
