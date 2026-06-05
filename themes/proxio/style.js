@@ -750,15 +750,19 @@ const Style = () => {
     }
 
     #theme-proxio #notion-article .notion-h1 {
-      font-size: 1.38em;
+      font-size: 1.444em;
     }
 
     #theme-proxio #notion-article .notion-h2 {
-      font-size: 1.22em;
+      font-size: 1.333em;
     }
 
     #theme-proxio #notion-article .notion-h3 {
-      font-size: 1.08em;
+      font-size: 1.222em;
+    }
+
+    #theme-proxio #notion-article .notion-h4 {
+      font-size: 1.111em;
     }
 
     #theme-proxio #notion-article .notion-list {
