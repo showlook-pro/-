@@ -2579,6 +2579,9 @@ figure.notion-asset-wrapper.notion-asset-wrapper-video > div {
 }
 
 #notion-article .notion-toggle > summary {
+  --notion-toggle-marker-color: #a7adb5;
+  --notion-toggle-marker-offset: 0.64em;
+  --notion-toggle-marker-size: 0.42em;
   display: flex;
   align-items: flex-start;
   gap: 0.55em;
@@ -2587,6 +2590,10 @@ figure.notion-asset-wrapper.notion-asset-wrapper-video > div {
   outline: none;
   line-height: 1.68 !important;
   list-style: none;
+}
+
+#notion-article .notion-toggle > summary:has(> .notion-h) {
+  --notion-toggle-marker-offset: 0.86em;
 }
 
 #notion-article .notion-toggle > summary::-webkit-details-marker {
@@ -2599,22 +2606,23 @@ figure.notion-asset-wrapper.notion-asset-wrapper-video > div {
 
 #notion-article .notion-toggle > summary::before {
   content: '';
-  width: 0.42em;
-  height: 0.42em;
+  width: var(--notion-toggle-marker-size);
+  height: var(--notion-toggle-marker-size);
   flex: 0 0 auto;
-  margin-top: 0.58em;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  color: currentColor;
-  opacity: 0.72;
+  margin-top: var(--notion-toggle-marker-offset);
+  border-right: 2px solid var(--notion-toggle-marker-color);
+  border-bottom: 2px solid var(--notion-toggle-marker-color);
+  color: var(--notion-toggle-marker-color);
+  opacity: 1;
   transform: rotate(-45deg);
   transition:
     transform 160ms ease,
-    opacity 160ms ease;
+    opacity 160ms ease,
+    border-color 160ms ease;
 }
 
 #notion-article .notion-toggle[open] > summary::before {
-  opacity: 0.9;
+  opacity: 1;
   transform: rotate(45deg);
 }
 
@@ -2665,8 +2673,13 @@ figure.notion-asset-wrapper.notion-asset-wrapper-video > div {
   }
 
   #notion-article .notion-toggle > summary {
+    --notion-toggle-marker-offset: 0.7em;
     padding: 0.55rem 0.125rem !important;
     line-height: 1.72 !important;
+  }
+
+  #notion-article .notion-toggle > summary:has(> .notion-h) {
+    --notion-toggle-marker-offset: 1.08em;
   }
 
   #notion-article .notion-toggle > summary .notion-h,
