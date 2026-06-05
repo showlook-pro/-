@@ -7,7 +7,7 @@ import { siteConfig } from '@/lib/config'
 import { isBrowser } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Career } from './components/Career'
 import { BackToTopButton } from './components/BackToTopButton'
 import { Blog } from './components/Blog'
@@ -39,6 +39,8 @@ import Lenis from '@/components/Lenis'
 import Announcement from './components/Announcement'
 import CursorDot from '@/components/CursorDot'
 import LoadingCover from './components/LoadingCover'
+import TocDrawer from './components/TocDrawer'
+import TocDrawerButton from './components/TocDrawerButton'
 
 const NotionPage = dynamic(() => import('@/components/NotionPage'), {
     ssr: true
@@ -82,6 +84,8 @@ const ClerkSignUp = dynamic(
  */
 const LayoutBase = props => {
     const { children } = props
+    const tocDrawerRef = useRef(null)
+    const hasToc = props?.post?.toc?.length > 0
 
     // 加载wow动画
     useEffect(() => {
@@ -105,6 +109,14 @@ const LayoutBase = props => {
 
             {/* 悬浮按钮 */}
             <BackToTopButton />
+            {hasToc && (
+                <>
+                    <TocDrawerButton
+                        onClick={() => tocDrawerRef.current?.handleSwitchVisible()}
+                    />
+                    <TocDrawer post={props.post} cRef={tocDrawerRef} />
+                </>
+            )}
 
             {/* 鼠标阻尼动画 */}
             <Lenis />

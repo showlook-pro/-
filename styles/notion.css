@@ -2405,7 +2405,10 @@ svg + .notion-page-title-text {
 }
 
 .notion-simple-table {
-  @apply whitespace-nowrap overflow-x-auto block w-full border-0 !important;
+  @apply w-full border-0 !important;
+  display: table !important;
+  table-layout: auto;
+  white-space: normal !important;
 }
 
 .notion-asset-wrapper-pdf > div {
@@ -2452,6 +2455,22 @@ tbody tr {
   display: table;
   width: 100%;
   table-layout: fixed;
+}
+
+.notion-simple-table thead {
+  display: table-header-group;
+}
+
+.notion-simple-table tbody {
+  display: table-row-group;
+}
+
+.notion-simple-table tr {
+  display: table-row;
+}
+
+.notion-simple-table td {
+  width: auto !important;
 }
 
 .notion-collection-card {
@@ -2560,15 +2579,49 @@ figure.notion-asset-wrapper.notion-asset-wrapper-video > div {
 }
 
 #notion-article .notion-toggle > summary {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55em;
   padding: 0.48rem 0.125rem !important;
   cursor: pointer;
   outline: none;
   line-height: 1.68 !important;
+  list-style: none;
+}
+
+#notion-article .notion-toggle > summary::-webkit-details-marker {
+  display: none;
+}
+
+#notion-article .notion-toggle > summary::marker {
+  content: '';
+}
+
+#notion-article .notion-toggle > summary::before {
+  content: '';
+  width: 0.42em;
+  height: 0.42em;
+  flex: 0 0 auto;
+  margin-top: 0.58em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  color: currentColor;
+  opacity: 0.72;
+  transform: rotate(-45deg);
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+#notion-article .notion-toggle[open] > summary::before {
+  opacity: 0.9;
+  transform: rotate(45deg);
 }
 
 #notion-article .notion-toggle > summary .notion-h,
 #notion-article .notion-toggle > summary .notion-text {
+  flex: 1 1 auto;
+  min-width: 0;
   margin: 0 !important;
   padding: 0 !important;
   line-height: 1.68 !important;
